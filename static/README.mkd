@@ -1,0 +1,3 @@
+## Static Content Server Queue Tasks ##
+
+These are tasks which run on the static content server, preparing content for download there.
