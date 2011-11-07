@@ -19,7 +19,7 @@ def getLocation(commons_id=None)
     if commons_id != None:
         whr = 'commons_id = %d' % (commons_id)
         return md.Search('dt_location',where = whr)
-    return md.Search('dt_location',where = whr)
+    return md.Search('dt_location')
 
 @task
 def sleep(s):
