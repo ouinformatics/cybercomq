@@ -3,14 +3,14 @@
 from zipfile import ZipFile
 from StringIO import StringIO
 from urllib2 import urlopen
-from cybercom.api.catalog import datalayer as dl
+from cybercom.data.catalog import datalayer as dl
 from datetime import datetime
 import socket
 import os
 
 
 
-STATIC_DIR='/static'
+STATIC_DIR='/static/request'
 
 def catalog_files(commons_id, cat_id, start_date, end_date=None, var_id='URL'):
     ''' Get a list of files from cc catalog based on commons_id and date '''
@@ -40,13 +40,13 @@ def zipurls(files):
 def makezip(urls, outname, overwrite=False):
     ''' Make a zipfile from a set of urls '''
     full_path = os.path.join(STATIC_DIR,outname)
-    try:
+    try:    
         if not os.path.exists(outname) and overwrite:
             os.remove(full_path)
         open(full_path, 'w').write(zipurls(urls).read())
         return 'http://%s/%s' % ( socket.gethostname(), outname) 
     except:
-        print "Error writing zip file"
+        return "Error writing zip file"
 
     
 

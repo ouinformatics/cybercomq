@@ -1,6 +1,6 @@
 from celery.task import task
 import filezip as fz
-from cybercom.api.catalog import datalayer as dl
+from cybercom.data.catalog import datalayer as dl
 from datetime import datetime
 
 @task
@@ -10,7 +10,7 @@ def modiscountry(product, country, start_date, end_date):
     cat_ids = [ item['cat_id'] for item in lookup if item['cat_name'] == product ]
     files = []
     for cat_id in cat_ids:
-        files.append(fz.getEventResult_Country(cat_id=cat_id, 
+        files += fz.getEventResult_Country(cat_id=cat_id, 
                         country=country, start_date=start_date, 
                         end_date=end_date, var_id='URL')
     outfile='%s_%s_%s_%s.zip' % (product, country, start_date.strftime('%Y_%m_%d'), end_date.strftime('%Y_%m_%d')) 
