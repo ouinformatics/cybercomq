@@ -14,7 +14,7 @@ def add(x, y):
     #return md.Search('dt_location')
     #return x + y 
 @task
-def getLocation(commons_id=None)
+def getLocation(commons_id=None):
     md=datalayer.Metadata()
     if commons_id != None:
         whr = 'commons_id = %d' % (commons_id)
