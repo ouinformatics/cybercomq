@@ -13,6 +13,6 @@ def modiscountry(product, country, start_date, end_date):
         files += fz.getEventResult_Country(cat_id=cat_id, 
                         country=country, start_date=start_date, 
                         end_date=end_date, var_id='URL')
-    outfile='%s_%s_%s_%s.zip' % (product, country, start_date.strftime('%Y%m%d'), end_date.strftime('%Y%m%d')) 
+    outfile='request/%s_%s_%s_%s.zip' % (product, country, start_date.strftime('%Y%m%d'), end_date.strftime('%Y%m%d')) 
     return fz.makezip(files, outname=outfile)
 
