@@ -7,7 +7,7 @@ from cybercom.data.catalog import datalayer
 from subprocess import call
 #call(["ls", "-l"])
 import os
-ip-129-15-40-58.rccc.ou.edu
+
 if os.uname()[1] == 'ip-129-15-40-58.rccc.ou.edu':
     basedir = '/Users/mstacy/Desktop/TECO_HarvardForest/'
 elif os.uname()[1] == 'earth.rccc.ou.edu':
