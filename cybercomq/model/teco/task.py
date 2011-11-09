@@ -22,6 +22,21 @@ def add(x, y):
     #return md.Search('dt_location')
     #return x + y 
 
+
+@task(serilizer="json")
+def getTecoinput():
+    '''Currently setup up for demo specific input files'''
+    try:
+        os.chdir(basedir)
+        md=datalayer.Metadata()
+        sWhere = 'event_id = (select event_id from dt_event where cat_id = %d or cat_id = ) ' % (1446799,1446801) 
+        res = md.Search('dt_result',where=sWhere,column=['var_id','result_text'])
+        for url in res:
+            cmd = "wget "+  url['result_text']
+            call([cmd,])
+        return True 
+    except:
+        raise
 @task
 def runTeco(param):
     ''' run teco model 
