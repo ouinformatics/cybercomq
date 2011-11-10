@@ -50,7 +50,7 @@ def makezip(urls, outname, outpath, overwrite=False):
         if not os.path.exists(outname) and overwrite:
             os.remove(full_path)
         open(full_path, 'w').write(zipurls(urls).read())
-        return 'http://%s/%s' % ( socket.gethostname(), outname) 
+        return 'http://%s/%s/%s' % ( socket.gethostname(),'request', outname) 
     except:
         return "Error writing zip file"
 
