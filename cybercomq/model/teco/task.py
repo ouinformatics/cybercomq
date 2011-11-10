@@ -6,7 +6,7 @@ from urllib2 import urlopen
 from cybercom.data.catalog import datalayer
 from subprocess import call
 #call(["ls", "-l"])
-import os
+import os,commands
 
 if os.uname()[1] == 'ip-129-15-40-58.rccc.ou.edu':
     basedir = '/Users/mstacy/Desktop/TECO_HarvardForest/'
@@ -27,13 +27,16 @@ def add(x, y):
 def getTecoinput():
     '''Currently setup up for demo specific input files'''
     try:
-        os.chdir(basedir)
+        #os.chdir(basedir)
         md=datalayer.Metadata()
         sWhere = "var_id = 'URL' and event_id in (select event_id from dt_event where cat_id = %d or cat_id = %d) " % (1446799,1446801) 
         res = md.Search('dt_result',where=sWhere,column=['var_id','result_text'])
         for url in res:
-            cmd = "wget " +  url['result_text']
-            call([cmd,])
+            temp= url['result_text'].split("/")
+            fname = temp[len(temp)-1]
+            cmd = "wget -r -O " + basedir + fname + " " + url['result_text']
+            print cmd
+            a= commands.getoutput(cmd) #call(cmd)
         return True 
     except:
         raise
