@@ -10,10 +10,16 @@ import os
 
 
 
-STATIC_DIR='/static/request'
+
+def catname2catid(cat_name,commons_id):
+    """ For a particular commons_id return cat_ids matching on cat_name """ 
+    md = dl.Metadata()
+    lookup = md.Search('dt_catalog', ['cat_id', 'cat_name'], where='commons_id = %s' % (commons_id))
+    return [ item['cat_id'] for item in lookup if item['cat_name'] == cat_name ]
+
 
 def catalog_files(commons_id, cat_id, start_date, end_date=None, var_id='URL'):
-    ''' Get a list of files from cc catalog based on commons_id and date '''
+    """ Get a list of files from cc catalog based on commons_id and date """
     return dl.event_results_by_time(commons_id, cat_id, start_date, end_date, var_id)
 
 def getEventResult_Country(**kwargs):
@@ -37,9 +43,9 @@ def zipurls(files):
     else:
         return "ERROR: expected a list of URLs"
 
-def makezip(urls, outname, overwrite=False):
+def makezip(urls, outname, outpath, overwrite=False):
     ''' Make a zipfile from a set of urls '''
-    full_path = os.path.join(STATIC_DIR,outname)
+    full_path = os.path.join(outpath,outname)
     try:    
         if not os.path.exists(outname) and overwrite:
             os.remove(full_path)
