@@ -5,6 +5,8 @@ from datetime import datetime
 import socket
 import os
 
+BROKER_URL = "amqplib://jduckles:cybercommons@fire.rccc.ou.edu/cybercom_test"
+
 @task
 def modiscountry(product, country, start_date, end_date, outpath=None):
     if socket.gethostname() == 'static.cybercommons.org' and not outpath:
