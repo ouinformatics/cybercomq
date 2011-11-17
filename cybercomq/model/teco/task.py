@@ -16,7 +16,22 @@ elif os.uname()[1] == 'earth.rccc.ou.edu':
 @task(serializer="json")
 def add(x, y):
     return x + y
-
+@task(serilizer="json")
+def initTECOrun(task_id=None):
+    ''' Create working directory
+        Create data files
+        Link executable to file
+        return working directory
+    '''
+    newDir = basedir + "celery_data/" + task_id
+    call(["mkdir",newDir])
+    os.chdir(newDir)
+    call(["ln -s",basedir + "runTeco",newDir + "/runTeco"])
+    call(["ln -s",basedir + "sitepara_tcs.txt",newDir + "/sitepara_tcs.txt"])
+    call(["ln -s",basedir + "initial_opt.txt",newDir + "/initial_opt.txt"])
+    call(["ln -s",basedir + "US-Ha1forcing.txt",newDir + "/US-Ha1forcing.txt"])
+    call(["ln -s",basedir + "HarvardForest_hr_Chuixiang.txt",newDir + "/HarvardForest_hr_Chuixiang.txt"])
+    return newDir
 @task(serilizer="json")
 def getTecoinput():
     '''Currently setup up for demo specific input files'''
