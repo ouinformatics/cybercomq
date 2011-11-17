@@ -30,29 +30,32 @@ def getEventResult_Country(**kwargs):
             'country': kwargs['country'], 'start_date': kwargs['start_date'],
             'end_date': kwargs['end_date'], 'var_id': kwargs['var_id']} )
 
-def zipurls(files):
+def zipurls(files,out_path):
     ''' Takes a list of URL locations, fetches files and returns a zipfile ''' 
     if type(files) is list:
-        inMemoryOutputFile = StringIO()
-        zipFile = ZipFile(inMemoryOutputFile, 'w')
+        OutputFile = open(out_path,'w')
+        zipFile = ZipFile(OutputFile, 'w', allowZip64=True)
         for filename in files:
             zipFile.writestr(os.path.basename(filename), urlopen(filename).read())
         zipFile.close()
-        inMemoryOutputFile.seek(0)
-        return inMemoryOutputFile
+        OutputFile.seek(0)
+        return out_path
     else:
         return "ERROR: expected a list of URLs"
 
 def makezip(urls, outname, outpath, overwrite=False):
     ''' Make a zipfile from a set of urls '''
     full_path = os.path.join(outpath,outname)
-    try:    
-        if not os.path.exists(outname) and overwrite:
-            os.remove(full_path)
-        open(full_path, 'w').write(zipurls(urls).read())
+    #try:    
+    if not os.path.exists(outname) and overwrite:
+        os.remove(full_path)
+    zipurls(urls,full_path)
+    if os.path.exists(full_path):
         return 'http://%s/%s/%s' % ( socket.gethostname(),'request', outname) 
-    except:
-        return "Error writing zip file"
+    else:
+        return 'Couldn\'t write zipfile'
+    #except:
+    #    return "Error writing zip file"
 
     
 
