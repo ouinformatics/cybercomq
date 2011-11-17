@@ -23,7 +23,7 @@ def initTECOrun(task_id=None):
         Link executable to file
         return working directory
     '''
-    newDir = basedir + "celery_data/" + task_id
+    newDir = basedir + "celery_data/" + initTECOrun.request.id
     call(["mkdir",newDir])
     os.chdir(newDir)
     call(["ln -s",basedir + "runTeco",newDir + "/runTeco"])
