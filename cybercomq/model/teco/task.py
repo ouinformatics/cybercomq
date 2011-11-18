@@ -10,27 +10,36 @@ import os,commands
 
 if os.uname()[1] == 'ip-129-15-40-58.rccc.ou.edu':
     basedir = '/Users/mstacy/Desktop/TECO_HarvardForest/'
+elif os.uname()[1] == 'dhcp-162-41.rccc.ou.edu':
+    basedir = '/Users/mstacy/Desktop/TECO_HarvardForest/'
 elif os.uname()[1] == 'earth.rccc.ou.edu':
     basedir = '/scratch/cybercom/model/teco/'
+else:
+    raise "Current server( %s ) doesn't have directory for TECO Model setup!" % os.uname()[1]
 
 @task(serializer="json")
 def add(x, y):
     return x + y
 @task(serilizer="json")
-def initTECOrun(task_id=None):
+def initTECOrun():
     ''' Create working directory
         Create data files
         Link executable to file
         return working directory
     '''
-    newDir = basedir + "celery_data/" + initTECOrun.request.id
-    call(["mkdir",newDir])
+    newDir = basedir + "celery_data/" + str(initTECOrun.request.id)
+    try:
+        call(["mkdir",newDir])
+    except:
+        pass
     os.chdir(newDir)
-    call(["ln -s",basedir + "runTeco",newDir + "/runTeco"])
-    call(["ln -s",basedir + "sitepara_tcs.txt",newDir + "/sitepara_tcs.txt"])
-    call(["ln -s",basedir + "initial_opt.txt",newDir + "/initial_opt.txt"])
-    call(["ln -s",basedir + "US-Ha1forcing.txt",newDir + "/US-Ha1forcing.txt"])
-    call(["ln -s",basedir + "HarvardForest_hr_Chuixiang.txt",newDir + "/HarvardForest_hr_Chuixiang.txt"])
+    #print basedir + "runTeco"
+    #print newDir + "/runTeco"
+    call(["ln","-s",basedir + "runTeco",newDir + "/runTeco"])
+    call(["ln","-s",basedir + "sitepara_tcs.txt",newDir + "/sitepara_tcs.txt"])
+    call(["ln","-s",basedir + "initial_opt.txt",newDir + "/initial_opt.txt"])
+    call(["ln","-s",basedir + "US-Ha1forcing.txt",newDir + "/US-Ha1forcing.txt"])
+    call(["ln","-s",basedir + "HarvardForest_hr_Chuixiang.txt",newDir + "/HarvardForest_hr_Chuixiang.txt"])
     return newDir
 @task(serilizer="json")
 def getTecoinput():
@@ -50,13 +59,14 @@ def getTecoinput():
     except:
         raise
 @task
-def runTeco(param):
+def runTeco(runDir):
     ''' run teco model 
         param = {url to files files required to run model}
     '''
     try:
-        os.chdir(basedir)
-        call([basedir + 'runTeco'])
+        #runloc = os.path.join(runDir,'runTeco')
+        os.chdir(runDir)
+        call(['./runTeco'])
         return 'TECO Model run Complete'
     except:
         raise
