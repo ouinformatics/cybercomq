@@ -59,7 +59,7 @@ def getTecoinput(**kwargs):
     except:
         raise
 @task
-def runTeco(task_id=None):#runDir):
+def runTeco(task_id=None,**kwargs):#runDir):
     ''' run teco model 
         param = {url to files files required to run model}
     '''
