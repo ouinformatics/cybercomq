@@ -21,7 +21,7 @@ else:
 def add(x, y):
     return x + y
 @task(serilizer="json")
-def initTECOrun():
+def initTECOrun(**kwagrs):
     ''' Create working directory
         Create data files
         Link executable to file
