@@ -42,7 +42,7 @@ def initTECOrun():
     call(["ln","-s",basedir + "HarvardForest_hr_Chuixiang.txt",newDir + "/HarvardForest_hr_Chuixiang.txt"])
     return newDir
 @task(serilizer="json")
-def getTecoinput():
+def getTecoinput(**kwargs):
     '''Currently setup up for demo specific input files'''
     try:
         md=datalayer.Metadata()
@@ -59,13 +59,15 @@ def getTecoinput():
     except:
         raise
 @task
-def runTeco(runDir):
+def runTeco(task_id=None):#runDir):
     ''' run teco model 
         param = {url to files files required to run model}
     '''
     try:
+        if 'task_id' == None:
+            raise "'task_id' from cybercomq.model.teco.task.initTECOrun not given in keyword arguments."
         #runloc = os.path.join(runDir,'runTeco')
-        os.chdir(runDir)
+        os.chdir(basedir + "celery_data/" + task_id)
         call(['./runTeco'])
         return 'TECO Model run Complete'
     except:
