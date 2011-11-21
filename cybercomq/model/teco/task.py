@@ -72,7 +72,7 @@ def runTeco(task_id=None,**kwargs):#runDir):
         call(['./runTeco'])
         webloc ="/static/queue/model/teco/" + task_id + ".txt"
         call(['scp', wkdir +"/HarvardForest_hr_Chuixiang.txt", "mstacy@static.cybercommons.org:" + webloc])
-        http= "http://static.cybercommons.org/queue/model/teco/" + task_id + ".txt"
+        http= "|http://static.cybercommons.org/queue/model/teco/" + task_id + ".txt|"
         return http #'TECO Model run Complete'
     except:
         raise
