@@ -5,10 +5,10 @@ from datetime import datetime
 import socket
 import os
 
-BROKER_URL = "amqplib://jduckles:cybercommons@fire.rccc.ou.edu/cybercom_test"
+#BROKER_URL = "amqplib://jduckles:cybercommons@fire.rccc.ou.edu/cybercom_test"
 
-@task(serializer='json')
-def modiscountry(product, country, start_date, end_date, outpath=None):
+@task()
+def modiscountry(product, country, start_date, end_date, notify=None, outpath=None):
     if socket.gethostname() == 'static.cybercommons.org' and not outpath:
         outpath = '/static/request'
     elif not outpath:
@@ -29,5 +29,14 @@ def modiscountry(product, country, start_date, end_date, outpath=None):
                         country=country, start_date=start_date, 
                         end_date=end_date, var_id='URL')
     outfile='%s_%s_%s_%s.zip' % (product, country, start_date.strftime('%Y%m%d'), end_date.strftime('%Y%m%d')) 
-    return fz.makezip(files, outname=outfile, outpath=outpath)
+    download = fz.makezip(files, outname=outfile, outpath=outpath)
+    if notify:
+        message = """You can download your file at: %s
+This link will expire in 48 hours"""  % (download)
+        notify_email(notify, "Your MODIS extract for %s %s %s %s has completed" % (product, country, start_date, end_date), message)
+    return download
+
+def modistile(product, country, start_date, end_date, outpath=None, notify=None):
+    """ Prepare zipfile of a single MODIS tile for download """
+    pass
 
