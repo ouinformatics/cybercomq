@@ -33,7 +33,7 @@ def modiscountry(product, country, start_date, end_date, notify=None, outpath=No
     if notify:
         message = """You can download your file at: %s
 This link will expire in 48 hours"""  % (download)
-        notify_email(notify, "Your MODIS extract for %s %s %s %s has completed" % (product, country, start_date, end_date), message)
+        fz.notify_email(notify, "Your MODIS extract for %s %s %s %s has completed" % (product, country, start_date, end_date), message)
     return download
 
 def modistile(product, country, start_date, end_date, outpath=None, notify=None):
