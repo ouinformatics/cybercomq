@@ -14,14 +14,14 @@ elif os.uname()[1] == 'dhcp-162-41.rccc.ou.edu':
     basedir = '/Users/mstacy/Desktop/TECO_HarvardForest/'
 elif os.uname()[1] == 'earth.rccc.ou.edu':
     basedir = '/scratch/cybercom/model/teco/'
-else:
-    raise "Current server( %s ) doesn't have directory for TECO Model setup!" % os.uname()[1]
+#elif os.uname()[1] == 'static.cybercommons.org':
+#    basedir =raise "Current server( %s ) doesn't have directory for TECO Model setup!" % os.uname()[1]
 
 @task(serializer="json")
 def add(x, y):
     return x + y
-@task(serilizer="json")
-def initTECOrun():
+@task(serializer="json")
+def initTECOrun(**kwagrs):
     ''' Create working directory
         Create data files
         Link executable to file
@@ -41,8 +41,8 @@ def initTECOrun():
     call(["ln","-s",basedir + "US-Ha1forcing.txt",newDir + "/US-Ha1forcing.txt"])
     call(["ln","-s",basedir + "HarvardForest_hr_Chuixiang.txt",newDir + "/HarvardForest_hr_Chuixiang.txt"])
     return newDir
-@task(serilizer="json")
-def getTecoinput():
+@task(serializer="json")
+def getTecoinput(**kwargs):
     '''Currently setup up for demo specific input files'''
     try:
         md=datalayer.Metadata()
@@ -59,18 +59,23 @@ def getTecoinput():
     except:
         raise
 @task
-def runTeco(runDir):
+def runTeco(task_id=None,**kwargs):#runDir):
     ''' run teco model 
         param = {url to files files required to run model}
     '''
     try:
+        if 'task_id' == None:
+            raise "'task_id' from cybercomq.model.teco.task.initTECOrun not given in keyword arguments."
         #runloc = os.path.join(runDir,'runTeco')
-        os.chdir(runDir)
+        wkdir =basedir + "celery_data/" + task_id
+        os.chdir(wkdir)
         call(['./runTeco'])
-        return 'TECO Model run Complete'
+        webloc ="/static/queue/model/teco/" + task_id + ".txt"
+        call(['scp', wkdir +"/US-Ha1_TECO_04.txt", "mstacy@static.cybercommons.org:" + webloc])
+        http= "|http://static.cybercommons.org/queue/model/teco/" + task_id + ".txt|"
+        return http #'TECO Model run Complete'
     except:
         raise
-
 @task
 def getLocation(commons_id=None):
     md=datalayer.Metadata()
