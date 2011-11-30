@@ -9,7 +9,16 @@ import socket
 import os
 
 
-
+def notify_email(toaddress, subject, bodytext):
+    import smtplib
+    from email.mime.text import MIMEText
+    msg = MIMEText(bodytext)
+    msg['Subject'] = subject
+    msg['From'] = "DoNotReply@ou.edu"
+    msg['To'] = toaddress
+    s = smtplib.SMTP('smtp.ou.edu')
+    s.sendmail("DoNotReply@ou.edu", [toaddress], msg.as_string())
+    return "Notification sent"
 
 def catname2catid(cat_name,commons_id):
     """ For a particular commons_id return cat_ids matching on cat_name """ 
