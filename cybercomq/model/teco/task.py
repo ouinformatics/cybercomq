@@ -34,7 +34,7 @@ def initTECOrun(**kwargs):
         os.chdir(newDir)
         call(["ln","-s",basedir + "runTeco",newDir + "/runTeco"])
         print "http://test.cybercommons.org/mongo/db_find/teco/siteparam/{'spec':{'site':'" + site + "'}}/?callback=?"
-        param = json.loads(urlopen("http://test.cybercommons.org/mongo/db_find/teco/siteparam/{'spec':{'site':'" + site + "'}}/?callback=?").read())[0]
+        param = json.loads(urlopen("http://test.cybercommons.org/mongo/db_find/teco/siteparam/{'spec':{'site':'" + site + "'}}/").read())[0]
         set_site_param(initTECOrun.request.id,param)
         #call(["ln","-s",basedir + "sitepara_tcs.txt",newDir + "/sitepara_tcs.txt"])
         call(["ln","-s",basedir + "initial_opt.txt",newDir + "/initial_opt.txt"])
