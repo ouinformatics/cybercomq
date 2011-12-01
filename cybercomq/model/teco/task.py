@@ -21,26 +21,26 @@ elif os.uname()[1] == 'earth.rccc.ou.edu':
 def add(x, y):
     return x + y
 @task(serializer="json")
-def initTECOrun(**kwagrs):
+def initTECOrun(**kwargs):
     ''' Create working directory
         Create data files
         Link executable to file
         return working directory
     '''
-    newDir = basedir + "celery_data/" + str(initTECOrun.request.id)
     try:
+        siteparam = kwargs['siteparam']
+        newDir = basedir + "celery_data/" + str(initTECOrun.request.id)
         call(["mkdir",newDir])
+        os.chdir(newDir)
+        call(["ln","-s",basedir + "runTeco",newDir + "/runTeco"])
+        set_site_param(initTECOrun.request.id,siteparam)
+        #call(["ln","-s",basedir + "sitepara_tcs.txt",newDir + "/sitepara_tcs.txt"])
+        call(["ln","-s",basedir + "initial_opt.txt",newDir + "/initial_opt.txt"])
+        call(["ln","-s",basedir + "US-Ha1forcing.txt",newDir + "/US-Ha1forcing.txt"])
+        call(["ln","-s",basedir + "HarvardForest_hr_Chuixiang.txt",newDir + "/HarvardForest_hr_Chuixiang.txt"])
+        return newDir
     except:
-        pass
-    os.chdir(newDir)
-    #print basedir + "runTeco"
-    #print newDir + "/runTeco"
-    call(["ln","-s",basedir + "runTeco",newDir + "/runTeco"])
-    call(["ln","-s",basedir + "sitepara_tcs.txt",newDir + "/sitepara_tcs.txt"])
-    call(["ln","-s",basedir + "initial_opt.txt",newDir + "/initial_opt.txt"])
-    call(["ln","-s",basedir + "US-Ha1forcing.txt",newDir + "/US-Ha1forcing.txt"])
-    call(["ln","-s",basedir + "HarvardForest_hr_Chuixiang.txt",newDir + "/HarvardForest_hr_Chuixiang.txt"])
-    return newDir
+        raise
 @task(serializer="json")
 def getTecoinput(**kwargs):
     '''Currently setup up for demo specific input files'''
@@ -72,10 +72,33 @@ def runTeco(task_id=None,**kwargs):#runDir):
         call(['./runTeco'])
         webloc ="/static/queue/model/teco/" + task_id + ".txt"
         call(['scp', wkdir +"/US-Ha1_TECO_04.txt", "mstacy@static.cybercommons.org:" + webloc])
-        http= "|http://static.cybercommons.org/queue/model/teco/" + task_id + ".txt|"
+        http= "http://static.cybercommons.org/queue/model/teco/" + task_id + ".txt"
         return http #'TECO Model run Complete'
     except:
         raise
+@task(serializer="json")
+def set_site_param(task_id,param):
+    ''' Param is a dictionary with the paramiters'''
+    head =[ 'site','vegtype','inputfile','NEEfile','outputfile','lat','Longitude','wsmax','wsmin','gddonset',
+            'LAIMAX','LAIMIN','rdepth','Rootmax','Stemmax','SapR','SapS','SLA','GLmax','GRmax','Gsmax','stom_n',
+            'a1','Ds0','Vcmx0','extkU','xfang','alpha','co2ca','Tau_Leaf','Tau_Wood','Tau_Root','Tau_F','Tau_C',
+            'Tau_Micro','Tau_SlowSOM','Tau_Passive']
+    wkdir =basedir + "celery_data/" + task_id
+    os.chdir(wkdir)
+    header =''
+    value=''
+    for col in head:
+        if col =="Tau_Passive":
+            header = header + col + "\n"
+            value = value + str(param[col]) + "\n"
+        else:
+            header = header + col + "\t"
+            value = value + str(param[col]) + "\t"
+    f1 = open('sitepara_tcs.txt','w')
+    f1.write(header)
+    f1.write(value)
+    f1.close()
+
 @task
 def getLocation(commons_id=None):
     md=datalayer.Metadata()
