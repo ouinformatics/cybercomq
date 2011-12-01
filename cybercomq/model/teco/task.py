@@ -20,7 +20,7 @@ elif os.uname()[1] == 'earth.rccc.ou.edu':
 @task(serializer="json")
 def add(x, y):
     return x + y
-@task(serializer="json")
+@task()
 def initTECOrun(**kwargs):
     ''' Create working directory
         Create data files
@@ -33,6 +33,7 @@ def initTECOrun(**kwargs):
         call(["mkdir",newDir])
         os.chdir(newDir)
         call(["ln","-s",basedir + "runTeco",newDir + "/runTeco"])
+        print "http://test.cybercommons.org/mongo/db_find/teco/siteparam/{'spec':{'site':'" + site + "'}}/?callback=?"
         param = json.loads(urlopen("http://test.cybercommons.org/mongo/db_find/teco/siteparam/{'spec':{'site':'" + site + "'}}/?callback=?").read())[0]
         set_site_param(initTECOrun.request.id,param)
         #call(["ln","-s",basedir + "sitepara_tcs.txt",newDir + "/sitepara_tcs.txt"])
@@ -77,7 +78,7 @@ def runTeco(task_id=None,**kwargs):#runDir):
         return http #'TECO Model run Complete'
     except:
         raise
-@task(serializer="json")
+@task()
 def set_site_param(task_id,param):
     ''' Param is a dictionary with the paramiters'''
     head =[ 'site','vegtype','inputfile','NEEfile','outputfile','lat','Longitude','wsmax','wsmin','gddonset',
