@@ -33,7 +33,8 @@ def initTECOrun(**kwargs):
         call(["mkdir",newDir])
         os.chdir(newDir)
         call(["ln","-s",basedir + "runTeco",newDir + "/runTeco"])
-        set_site_param(initTECOrun.request.id,siteparam)
+        param = json.loads(urlopen(siteparam).read())[0]
+        set_site_param(initTECOrun.request.id,param)
         #call(["ln","-s",basedir + "sitepara_tcs.txt",newDir + "/sitepara_tcs.txt"])
         call(["ln","-s",basedir + "initial_opt.txt",newDir + "/initial_opt.txt"])
         call(["ln","-s",basedir + "US-Ha1forcing.txt",newDir + "/US-Ha1forcing.txt"])
