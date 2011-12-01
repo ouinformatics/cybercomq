@@ -28,12 +28,12 @@ def initTECOrun(**kwargs):
         return working directory
     '''
     try:
-        siteparam = kwargs['siteparam']
+        site = kwargs['site']
         newDir = basedir + "celery_data/" + str(initTECOrun.request.id)
         call(["mkdir",newDir])
         os.chdir(newDir)
         call(["ln","-s",basedir + "runTeco",newDir + "/runTeco"])
-        param = json.loads(urlopen(siteparam).read())[0]
+        param = json.loads(urlopen("http://test.cybercommons.org/mongo/db_find/teco/siteparam/{'spec':{'site':'" + site + + "'}}/?callback=?").read())[0]
         set_site_param(initTECOrun.request.id,param)
         #call(["ln","-s",basedir + "sitepara_tcs.txt",newDir + "/sitepara_tcs.txt"])
         call(["ln","-s",basedir + "initial_opt.txt",newDir + "/initial_opt.txt"])
