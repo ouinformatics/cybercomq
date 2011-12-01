@@ -6,7 +6,7 @@ from urllib2 import urlopen
 from cybercom.data.catalog import datalayer
 from subprocess import call
 #call(["ls", "-l"])
-import os,commands
+import os,commands,json
 
 if os.uname()[1] == 'ip-129-15-40-58.rccc.ou.edu':
     basedir = '/Users/mstacy/Desktop/TECO_HarvardForest/'
