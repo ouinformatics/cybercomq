@@ -71,7 +71,8 @@ def runTeco(task_id=None,**kwargs):#runDir):
         #runloc = os.path.join(runDir,'runTeco')
         wkdir =basedir + "celery_data/" + task_id
         os.chdir(wkdir)
-        call(['./runTeco',wkdir + "/sitepara_tcs.txt",wkdr + "/US-HA1_TECO_04.txt"])
+        call(['./runTeco'])
+        #call(['./runTeco',wkdir + "/sitepara_tcs.txt",wkdr + "/US-HA1_TECO_04.txt"])
         webloc ="/static/queue/model/teco/" + task_id + ".txt"
         call(['scp', wkdir +"/US-HA1_TECO_04.txt", "mstacy@static.cybercommons.org:" + webloc])
         http= "http://static.cybercommons.org/queue/model/teco/" + task_id + ".txt"
