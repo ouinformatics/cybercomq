@@ -60,7 +60,7 @@ def getTecoinput(**kwargs):
         return True 
     except:
         raise
-@task
+@task()
 def runTeco(task_id=None,**kwargs):#runDir):
     ''' run teco model 
         param = {url to files files required to run model}
@@ -73,7 +73,7 @@ def runTeco(task_id=None,**kwargs):#runDir):
         os.chdir(wkdir)
         call(['./runTeco'])
         webloc ="/static/queue/model/teco/" + task_id + ".txt"
-        call(['scp', wkdir +"/US-Ha1_TECO_04.txt", "mstacy@static.cybercommons.org:" + webloc])
+        call(['scp', wkdir +"/US-HA1_TECO_04.txt", "mstacy@static.cybercommons.org:" + webloc])
         http= "http://static.cybercommons.org/queue/model/teco/" + task_id + ".txt"
         return http #'TECO Model run Complete'
     except:
