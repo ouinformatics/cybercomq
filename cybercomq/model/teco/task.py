@@ -1,12 +1,10 @@
 from celery.task import task
-#import time 
-#from StringIO import StringIO
-#from cybercom.api.catalog import datalayerutils as dl
+from pymongo import Connection
+from datetime import datetime
 from urllib2 import urlopen
 from cybercom.data.catalog import datalayer
 from subprocess import call,STDOUT
-#call(["ls", "-l"])
-import os,commands,json
+import os,commands,json,ast
 
 if os.uname()[1] == 'ip-129-15-40-58.rccc.ou.edu':
     basedir = '/Users/mstacy/Desktop/TECO_HarvardForest/'
@@ -38,7 +36,8 @@ def initTECOrun(**kwargs):
         set_site_param(initTECOrun.request.id,param)
         #call(["ln","-s",basedir + "sitepara_tcs.txt",newDir + "/sitepara_tcs.txt"])
         call(["ln","-s",basedir + "initial_opt.txt",newDir + "/initial_opt.txt"])
-        call(["ln","-s",basedir + "US-Ha1forcing.txt",newDir + "/US-Ha1forcing.txt"])
+        custom_tecov2_setup(initTECOrun.request.id,'(1991,2006)','[]')#years,forecast)
+        #call(["ln","-s",basedir + "US-Ha1forcing.txt",newDir + "/US-Ha1forcing.txt"])
         call(["ln","-s",basedir + "HarvardForest_hr_Chuixiang.txt",newDir + "/HarvardForest_hr_Chuixiang.txt"])
         return newDir
     except:
@@ -102,8 +101,52 @@ def set_site_param(task_id,param):
     f1.write(header)
     f1.write(value)
     f1.close()
-
-@task
+@task()
+def custom_tecov2_setup(task_id,years,forecast):
+    # Header row
+    header='Year  DOY  hour  T_air q1   Q_air  q2   Wind_speed q3     Precip   q4   Pressure   q5  R_global_in q6   R_longwave_in q7   CO2'
+    head =['Year','DOY','hour','T_air','q1','Q_air','q2','Wind_speed','q3','Precip','q4','Pressure','q5',
+            'R_global_in','q6','R_longwave_in','q7','CO2']
+    #fixed width list of values
+    wd=[4,5,7,14,2,14,2,14,2,14,2,14,2,14,2,14,2,11]
+    #set working diectory
+    wkdir = basedir + "celery_data/" + task_id
+    #wkdir = "/home/mstacy/test"
+    os.chdir(wkdir)
+    #open file and set header
+    outfile = open("US-Ha1forcing.txt","w")
+    outfile.write(header + '\n\n')
+    #open mongo connection
+    db = Connection('fire.rccc.ou.edu').teco
+    #safe eval to get start and end dates
+    yr=ast.literal_eval(years)
+    start = datetime(yr[0],1,1)
+    end = datetime(yr[1] + 1,1,1)
+    #safe eval forecast to list of tuples
+    forc = ast.literal_eval(forecast)
+    set_input_data(db,head,wd,outfile,start,end,forc)
+@task()
+def set_input_data(db,fields,wd,outfile,start,end,forc):
+    #Set result set from mongo
+    result = db.forcing.find({"observed_date":{"$gte": start, "$lt": end}}).sort([('observed_date',1)])
+    for row in result:
+        rw=''
+        for col in fields:
+            rw = rw +  str(row[col]).rjust(int(wd[fields.index(col)]),' ')
+        outfile.write(rw + '\n')
+    #forecast added to add to forcing file
+    for forc_yr in forc:
+        result= db.forcing.find({'Year':forc_yr[1]}).sort([('observed_date',1)])
+        for row in result:
+            rw=''
+            for col in head:
+                if col =='Year':
+                    rw = rw +  str(forc_yr[0]).rjust(int(wd[fields.index(col)]),' ')
+                else:
+                    rw = rw +  str(row[col]).rjust(int(wd[fields.index(col)]),' ')
+            outfile.write(rw + '\n')
+       
+@task()
 def getLocation(commons_id=None):
     md=datalayer.Metadata()
     if commons_id != None:
