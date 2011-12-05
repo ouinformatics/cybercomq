@@ -150,7 +150,7 @@ def set_input_data(db,fields,wd,outfile,start,end,forc):
         result= db.forcing.find({'Year':forc_yr[1]}).sort([('observed_date',1)])
         for row in result:
             rw=''
-            for col in head:
+            for col in fields:#head:
                 if col =='Year':
                     rw = rw +  str(forc_yr[0]).rjust(int(wd[fields.index(col)]),' ')
                 else:
