@@ -26,17 +26,28 @@ def initTECOrun(**kwargs):
         return working directory
     '''
     try:
-        site = kwargs['site']
+        if 'site' in kwargs: 
+            site = kwargs['site']
+        else:
+            raise "site is a required parameter"
+        if 'base_yrs' in kwargs:
+            base_yrs = kwargs['base_yrs']
+        else:
+            raise "base_yrs is a required parameter"
+        if 'forecast' in kwargs:
+            forecast = kwargs['forecast']
+        else:
+            raise "forecast is required parameter(list with tuple of year forcast and year getting data '[(2007,1991)]')"
         newDir = basedir + "celery_data/" + str(initTECOrun.request.id)
         call(["mkdir",newDir])
         os.chdir(newDir)
         call(["ln","-s",basedir + "runTeco",newDir + "/runTeco"])
-        print "http://test.cybercommons.org/mongo/db_find/teco/siteparam/{'spec':{'site':'" + site + "'}}/?callback=?"
+        #print "http://test.cybercommons.org/mongo/db_find/teco/siteparam/{'spec':{'site':'" + site + "'}}/?callback=?"
         param = json.loads(urlopen("http://test.cybercommons.org/mongo/db_find/teco/siteparam/{'spec':{'site':'" + site + "'}}/").read())[0]
         set_site_param(initTECOrun.request.id,param)
         #call(["ln","-s",basedir + "sitepara_tcs.txt",newDir + "/sitepara_tcs.txt"])
         call(["ln","-s",basedir + "initial_opt.txt",newDir + "/initial_opt.txt"])
-        custom_tecov2_setup(initTECOrun.request.id,'(1991,2006)','[]')#years,forecast)
+        custom_tecov2_setup(initTECOrun.request.id, base_yrs, forecast)#years,forecast)
         #call(["ln","-s",basedir + "US-Ha1forcing.txt",newDir + "/US-Ha1forcing.txt"])
         call(["ln","-s",basedir + "HarvardForest_hr_Chuixiang.txt",newDir + "/HarvardForest_hr_Chuixiang.txt"])
         return newDir
