@@ -5,7 +5,7 @@ from pymongo import Connection
 import os
 from StringIO import StringIO
 
-def starspancmd( params, doshlex=True ):
+def starspancmd( doshlex=True, **params ):
     """
     Setup and run a starspan polygon-raster overlay command.
     params = {
@@ -25,11 +25,10 @@ def starspancmd( params, doshlex=True ):
             params['geom'] = str(geom).replace('[','(').replace(']',')')
             params['query'] = "select wkb_geometry, %(field)s from %(table)s where %(field)s in %(geom)s" % (params)
         elif type(geom) is str:
-             params['query'] = "select wkb_geometry, %(field)s from %(table)s where %(field)s = %(geom)s" % (params)
+            params['query'] = "select wkb_geometry, %(field)s from %(table)s where %(field)s = %(geom)s" % (params)
     else: # Otherwise select all records and process accordingly
+        print "" 
         params['query'] = "select wkb_geometry, %(field)s from %(table)s" % (params)
-
-
     command = 'starspan2 --verbose --vector "PG:dbname=%(dbname)s host=%(dbhost)s tables=%(table)s" --sql "%(query)s" --raster %(raster)s --stats %(outfile)s %(stats)s --fields %(field)s' % (params)
     if doshlex:
         return shlex.split(command)
