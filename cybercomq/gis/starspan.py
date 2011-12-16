@@ -27,7 +27,6 @@ def starspancmd( doshlex=True, **params ):
         elif type(geom) is str:
             params['query'] = "select wkb_geometry, %(field)s from %(table)s where %(field)s = %(geom)s" % (params)
     else: # Otherwise select all records and process accordingly
-        print "" 
         params['query'] = "select wkb_geometry, %(field)s from %(table)s" % (params)
     command = 'starspan2 --verbose --vector "PG:dbname=%(dbname)s host=%(dbhost)s tables=%(table)s" --sql "%(query)s" --raster %(raster)s --stats %(outfile)s %(stats)s --fields %(field)s' % (params)
     if doshlex:
