@@ -23,7 +23,7 @@ def starspancmd( doshlex=True, **params ):
         if type(params['geom']) is list:
             params['geom'] = str(params['geom']).replace('[','(').replace(']',')')
             params['query'] = "select wkb_geometry, %(field)s from %(table)s where %(field)s in %(geom)s" % (params)
-        elif type(params['geom']) in (str,int,float):
+        elif type(params['geom']) in (str,int,float,unicode):
             params['query'] = "select wkb_geometry, %(field)s from %(table)s where %(field)s = %(geom)s" % (params)
     else: # Otherwise select all records and process accordingly
         params['query'] = "select wkb_geometry, %(field)s from %(table)s" % (params)
