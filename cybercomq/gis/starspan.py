@@ -19,12 +19,11 @@ def starspancmd( doshlex=True, **params ):
     'geom': '201',
     }
     """
-    geom = params['geom']
-    if geom: # If geom supplied as string or list, extract all geometries matching
-        if type(geom) is list:
-            params['geom'] = str(geom).replace('[','(').replace(']',')')
+    if params.has_key('geom'): # If geom supplied as string or list, extract all geometries matching
+        if type(params['geom']) is list:
+            params['geom'] = str(params['geom']).replace('[','(').replace(']',')')
             params['query'] = "select wkb_geometry, %(field)s from %(table)s where %(field)s in %(geom)s" % (params)
-        elif type(geom) is str:
+        elif type(params['geom']) in (str,int,float):
             params['query'] = "select wkb_geometry, %(field)s from %(table)s where %(field)s = %(geom)s" % (params)
     else: # Otherwise select all records and process accordingly
         params['query'] = "select wkb_geometry, %(field)s from %(table)s" % (params)
