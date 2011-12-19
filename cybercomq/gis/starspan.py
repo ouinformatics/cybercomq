@@ -19,6 +19,7 @@ def starspancmd( doshlex=True, **params ):
     'geom': '201',
     }
     """
+    print params['field']
     if params.has_key('geom'): # If geom supplied as string or list, extract all geometries matching
         if type(params['geom']) is list:
             params['geom'] = str(params['geom']).replace('[','(').replace(']',')')
@@ -27,9 +28,9 @@ def starspancmd( doshlex=True, **params ):
             params['query'] = "select wkb_geometry, %(field)s from %(table)s where %(field)s = %(geom)s" % (params)
     else: # Otherwise select all records and process accordingly
         params['query'] = "select wkb_geometry, %(field)s from %(table)s" % (params)
-    command = '/usr/local/starspan/bin/starspan2 --verbose --vector "PG:dbname=%(dbname)s host=%(dbhost)s tables=%(table)s" --sql "%(query)s" --raster %(raster)s --stats %(outfile)s %(stats)s --fields %(field)s' % (params)
+    command = "/usr/local/starspan/bin/starspan2 --verbose --vector 'PG:dbname=%(dbname)s host=%(dbhost)s tables=%(table)s' --sql '%(query)s' --raster %(raster)s --stats %(outfile)s %(stats)s --fields %(field)s" % (params)
     if doshlex:
-        return shlex.split(command)
+        return shlex.split(command) 
     else:
         return command
 
