@@ -30,7 +30,7 @@ def starspancmd( doshlex=True, **params ):
         params['query'] = "select wkb_geometry, %(field)s from %(table)s" % (params)
     command = "/usr/local/starspan/bin/starspan2 --verbose --vector 'PG:dbname=%(dbname)s host=%(dbhost)s tables=%(table)s' --sql '%(query)s' --raster %(raster)s --stats %(outfile)s %(stats)s --fields %(field)s" % (params)
     if doshlex:
-        return shlex.split(command) 
+        return [ item.encode() for item in shlex.split(command) ]
     else:
         return command
 
