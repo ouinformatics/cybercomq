@@ -171,7 +171,7 @@ def set_input_data(db,fields,wd,outfile,start,end,forc):
                     if row['DOY'] == 60 and row['hour'] == 0.0:
                             result228 = db.forcing.find({'Year':forc_yr[1],'DOY':59}).sort([('observed_date',1)])
                             for row28 in result228:
-                                fw_file(outfile,fields,wd,forc_yr[0],29,row28)
+                                fw_file(outfile,fields,wd,forc_yr[0],60,row28)
                     fw_file(outfile,fields,wd,forc_yr[0],row['DOY']+1,row)
                 else:
                     fw_file(outfile,fields,wd,forc_yr[0],row['DOY'],row)
