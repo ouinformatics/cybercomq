@@ -153,16 +153,66 @@ def set_input_data(db,fields,wd,outfile,start,end,forc):
         outfile.write(rw + '\n')
     #forecast added to add to forcing file
     for forc_yr in forc:
+        f0=isLeap(forc_yr[0])
+        f1=isLeap(forc_yr[1])
+        opt=0
+        if f0==f1:
+            opt=1
+        elif f0:
+            opt=2
+        else:
+            opt=3
         result= db.forcing.find({'Year':forc_yr[1]}).sort([('observed_date',1)])
         for row in result:
-            rw=''
-            for col in fields:#head:
-                if col =='Year':
-                    rw = rw +  str(forc_yr[0]).rjust(int(wd[fields.index(col)]),' ')
+            if opt=1:
+                fw_file(outfile,forc_yr[0],row['DOY'],row)
+            elif opt=2:
+                if row['DOY']>= 60:
+                    if row['DOY'] == 60 and row['hour'] == 0.0:
+                            result228 = db.forcing.find({'Year':forc_yr[1],'DOY':59}).sort([('observed_date',1)])
+                            for row28 in result228:
+                                fw_file(outfile,forc_yr[0],29,row28)
+                    fw_file(outfile,forc_yr[0],row['DOY']+1,row)
                 else:
-                    rw = rw +  str(row[col]).rjust(int(wd[fields.index(col)]),' ')
-            outfile.write(rw + '\n')
-       
+                    fw_file(outfile,forc_yr[0],row['DOY'],row)
+            else:
+                if row['DOY']>= 60:
+                    if row['DOY'] == 60:
+                        pass
+                    else:
+                        fw_file(outfile,forc_yr[0],row['DOY']-1,row)
+                else:
+                    fw_file(outfile,forc_yr[0],row['DOY'],row)
+    
+            #lastrow=row
+            #rw=''
+            #for col in fields:#head:
+            #    if col =='Year':
+            #        rw = rw +  str(forc_yr[0]).rjust(int(wd[fields.index(col)]),' ')
+            #    else:
+            #        rw = rw +  str(row[col]).rjust(int(wd[fields.index(col)]),' ')
+            #outfile.write(rw + '\n')
+def fw_file(outfile,Year,DOY,row):
+    for col in fields:
+        if col =='Year':
+            rw = rw +  str(Year).rjust(int(wd[fields.index(col)]),' ')
+        elif col == 'DOY':
+            rw = rw +  str(DOY).rjust(int(wd[fields.index(col)]),' ')
+        else:
+            rw = rw +  str(row[col]).rjust(int(wd[fields.index(col)]),' ')
+    outfile.write(rw + '\n')
+
+def isLeap(year):
+    if (year % 4)==0:
+        if (year % 100)==0:
+            if (year % 400)==0:
+                return True
+            else:
+                return False
+        else:
+            return True     
+    else:
+        return False 
 @task()
 def sleep(s):
     time.sleep(s)
