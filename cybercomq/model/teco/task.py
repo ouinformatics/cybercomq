@@ -38,17 +38,23 @@ def initTECOrun(**kwargs):
             forecast = kwargs['forecast']
         else:
             raise "forecast is required parameter(list with tuple of year forcast and year getting data '[(2007,1991)]')"
+        if 'siteparam' in kwargs:
+            param = kwargs['siteparam']
+        else:
+            #Use default siteparam for site
+            param = json.loads(urlopen("http://test.cybercommons.org/mongo/db_find/teco/siteparam/{'spec':{'site':'" + site + "'}}/").read())[0]
         newDir = basedir + "celery_data/" + str(initTECOrun.request.id)
         call(["mkdir",newDir])
         os.chdir(newDir)
+        #create link to teco executable
         call(["ln","-s",basedir + "runTeco",newDir + "/runTeco"])
-        #print "http://test.cybercommons.org/mongo/db_find/teco/siteparam/{'spec':{'site':'" + site + "'}}/?callback=?"
-        param = json.loads(urlopen("http://test.cybercommons.org/mongo/db_find/teco/siteparam/{'spec':{'site':'" + site + "'}}/").read())[0]
+        #Set paramater file - Legacy TECO Model
         set_site_param(initTECOrun.request.id,param)
-        #call(["ln","-s",basedir + "sitepara_tcs.txt",newDir + "/sitepara_tcs.txt"])
+        #Set link to inital options file - Legacy TECO Model required
         call(["ln","-s",basedir + "initial_opt.txt",newDir + "/initial_opt.txt"])
-        custom_tecov2_setup(initTECOrun.request.id, base_yrs, forecast)#years,forecast)
-        #call(["ln","-s",basedir + "US-Ha1forcing.txt",newDir + "/US-Ha1forcing.txt"])
+        #Create forcing file according to input parameters
+        custom_tecov2_setup(initTECOrun.request.id, base_yrs, forecast)
+        #Set Link to file - Legacy TECO Model - Not used in fortran code but required
         call(["ln","-s",basedir + "HarvardForest_hr_Chuixiang.txt",newDir + "/HarvardForest_hr_Chuixiang.txt"])
         return newDir
     except:
@@ -158,14 +164,6 @@ def set_input_data(db,fields,wd,outfile,start,end,forc):
             outfile.write(rw + '\n')
        
 @task()
-def getLocation(commons_id=None):
-    md=datalayer.Metadata()
-    if commons_id != None:
-        whr = 'commons_id = %d' % (commons_id)
-        return md.Search('dt_location',where = whr)
-    return md.Search('dt_location')
-
-@task
 def sleep(s):
     time.sleep(s)
     return None
