@@ -193,6 +193,7 @@ def set_input_data(db,fields,wd,outfile,start,end,forc):
             #        rw = rw +  str(row[col]).rjust(int(wd[fields.index(col)]),' ')
             #outfile.write(rw + '\n')
 def fw_file(outfile,fields,Year,DOY,row):
+    rw=''
     for col in fields:
         if col =='Year':
             rw = rw +  str(Year).rjust(int(wd[fields.index(col)]),' ')
