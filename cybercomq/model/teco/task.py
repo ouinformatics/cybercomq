@@ -164,9 +164,9 @@ def set_input_data(db,fields,wd,outfile,start,end,forc):
             opt=3
         result= db.forcing.find({'Year':forc_yr[1]}).sort([('observed_date',1)])
         for row in result:
-            if opt=1:
+            if opt==1:
                 fw_file(outfile,forc_yr[0],row['DOY'],row)
-            elif opt=2:
+            elif opt==2:
                 if row['DOY']>= 60:
                     if row['DOY'] == 60 and row['hour'] == 0.0:
                             result228 = db.forcing.find({'Year':forc_yr[1],'DOY':59}).sort([('observed_date',1)])
