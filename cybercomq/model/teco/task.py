@@ -165,24 +165,24 @@ def set_input_data(db,fields,wd,outfile,start,end,forc):
         result= db.forcing.find({'Year':forc_yr[1]}).sort([('observed_date',1)])
         for row in result:
             if opt==1:
-                fw_file(outfile,fields,forc_yr[0],row['DOY'],row)
+                fw_file(outfile,fields,wd,forc_yr[0],row['DOY'],row)
             elif opt==2:
                 if row['DOY']>= 60:
                     if row['DOY'] == 60 and row['hour'] == 0.0:
                             result228 = db.forcing.find({'Year':forc_yr[1],'DOY':59}).sort([('observed_date',1)])
                             for row28 in result228:
-                                fw_file(outfile,fields,forc_yr[0],29,row28)
-                    fw_file(outfile,fields,forc_yr[0],row['DOY']+1,row)
+                                fw_file(outfile,fields,wd,forc_yr[0],29,row28)
+                    fw_file(outfile,fields,wd,forc_yr[0],row['DOY']+1,row)
                 else:
-                    fw_file(outfile,fields,forc_yr[0],row['DOY'],row)
+                    fw_file(outfile,fields,wd,forc_yr[0],row['DOY'],row)
             else:
                 if row['DOY']>= 60:
                     if row['DOY'] == 60:
                         pass
                     else:
-                        fw_file(outfile,fields,forc_yr[0],row['DOY']-1,row)
+                        fw_file(outfile,fields,wd,forc_yr[0],row['DOY']-1,row)
                 else:
-                    fw_file(outfile,fields,forc_yr[0],row['DOY'],row)
+                    fw_file(outfile,fields,wd,forc_yr[0],row['DOY'],row)
     
             #lastrow=row
             #rw=''
@@ -192,7 +192,7 @@ def set_input_data(db,fields,wd,outfile,start,end,forc):
             #    else:
             #        rw = rw +  str(row[col]).rjust(int(wd[fields.index(col)]),' ')
             #outfile.write(rw + '\n')
-def fw_file(outfile,fields,Year,DOY,row):
+def fw_file(outfile,fields,wd,Year,DOY,row):
     rw=''
     for col in fields:
         if col =='Year':
