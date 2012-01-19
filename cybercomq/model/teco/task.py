@@ -1,8 +1,8 @@
 from celery.task import task
 from pymongo import Connection
-from datetime import datetime
+from datetime import datetime,timedelta
 from urllib2 import urlopen
-from cybercom.data.catalog import datalayer
+from cybercom.data.catalog import datalayer,dataloader
 from subprocess import call,STDOUT
 import os,commands,json,ast
 
@@ -97,11 +97,24 @@ def runTeco(task_id=None,**kwargs):#runDir):
         webloc ="/static/queue/model/teco/" + task_id
        # call(['scp', wkdir +"/US-HA1_TECO_04.txt", "mstacy@static.cybercommons.org:" + webloc])
         call(['scp','-r', wkdir , "mstacy@static.cybercommons.org:" + webloc])
+        #load to mongo
+        dld = dataloader.Mongo_load('teco',host='fire.rccc.ou.edu' )
+        collection='taskresults'
+        adddict ={'task_id': task_id}
+        dld.file2mongo(wkdir + "/US-HA1_results.txt",collection,file_type='fixed_width',addDict=adddict,specificOperation=set_observed_date)
+
+
         #http= "http://static.cybercommons.org/queue/model/teco/" + task_id + ".txt"
         http= "http://static.cybercommons.org/queue/model/teco/" + task_id
         return http #'TECO Model run Complete'
     except:
         raise
+def set_observed_date(row):
+    odate = datetime(int(row['year']),1,1,int(row['hour']),0,0)
+    doy = timedelta(days=int(row['doy'])-1)
+    observed_date = odate + doy
+    row['observed_date']=observed_date
+    return row
 @task()
 def set_site_param(task_id,param):
     ''' Param is a dictionary with the paramiters'''
