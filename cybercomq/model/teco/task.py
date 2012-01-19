@@ -39,7 +39,7 @@ def initTECOrun(**kwargs):
         else:
             raise "forecast is required parameter(list with tuple of year forcast and year getting data '[(2007,1991)]')"
         if 'siteparam' in kwargs:
-            param = kwargs['siteparam']
+            param = ast.literal_eval(kwargs['siteparam'])
         else:
             #Use default siteparam for site
             param = json.loads(urlopen("http://test.cybercommons.org/mongo/db_find/teco/siteparam/{'spec':{'site':'" + site + "'}}/").read())[0]
