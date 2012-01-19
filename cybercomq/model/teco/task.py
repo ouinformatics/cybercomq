@@ -101,7 +101,8 @@ def runTeco(task_id=None,**kwargs):#runDir):
         dld = dataloader.Mongo_load('teco',host='fire.rccc.ou.edu' )
         collection='taskresults'
         adddict ={'task_id': task_id}
-        dld.file2mongo(wkdir + "/US-HA1_results.txt",collection,file_type='fixed_width',addDict=adddict,specificOperation=set_observed_date)
+        print wkdir + "/US-HA1_results.txt"
+        dld.file2mongo(wkdir + "/US-HA1_results.txt",collection,file_type='fixed_width',addDict=adddict)#,specificOperation=set_observed_date)
 
 
         #http= "http://static.cybercommons.org/queue/model/teco/" + task_id + ".txt"
