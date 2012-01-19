@@ -110,7 +110,7 @@ def runTeco(task_id=None,**kwargs):#runDir):
     except:
         raise
 def set_observed_date(row):
-    odate = datetime(int(row['year']),1,1,int(row['hour']),0,0)
+    odate = datetime(int(row['year']),1,1,int(row['hour'])-1,0,0)
     doy = timedelta(days=int(row['doy'])-1)
     observed_date = odate + doy
     row['observed_date']=observed_date
