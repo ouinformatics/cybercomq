@@ -90,9 +90,13 @@ def runTeco(task_id=None,**kwargs):#runDir):
         logfile= open(wkdir + "/logfile.txt","w")
         call(['./runTeco', wkdir + "/sitepara_tcs.txt", wkdir + "/US-HA1_TECO_04.txt"],stdout=logfile,stderr=STDOUT)
         #call(['./runTeco',wkdir + "/sitepara_tcs.txt",wkdr + "/US-HA1_TECO_04.txt"])
-        webloc ="/static/queue/model/teco/" + task_id + ".txt"
-        call(['scp', wkdir +"/US-HA1_TECO_04.txt", "mstacy@static.cybercommons.org:" + webloc])
-        http= "http://static.cybercommons.org/queue/model/teco/" + task_id + ".txt"
+
+       # webloc ="/static/queue/model/teco/" + task_id + ".txt"
+        webloc ="/static/queue/model/teco/" + task_id
+       # call(['scp', wkdir +"/US-HA1_TECO_04.txt", "mstacy@static.cybercommons.org:" + webloc])
+        call(['scp','-r', wkdir , "mstacy@static.cybercommons.org:" + webloc])
+        #http= "http://static.cybercommons.org/queue/model/teco/" + task_id + ".txt"
+        http= "http://static.cybercommons.org/queue/model/teco/" + task_id
         return http #'TECO Model run Complete'
     except:
         raise
