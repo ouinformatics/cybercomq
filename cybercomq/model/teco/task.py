@@ -105,8 +105,15 @@ def runTeco(task_id=None,**kwargs):#runDir):
 
 
         #http= "http://static.cybercommons.org/queue/model/teco/" + task_id + ".txt"
+        temp = "<h5>Result Files</h5><br/>"
         http= "http://static.cybercommons.org/queue/model/teco/" + task_id
-        return http #'TECO Model run Complete'
+        temp = temp +  ' <a href="' + http + '" target="_blank">' + http + '</a><br/>'
+        temp = temp "<h5>Database Result Link</h5><br/>"
+        http= "http://http://test.cybercommons.org/mongo/db_find/teco/taskresults/{'task_id':'" + task_id + "'}/"
+        temp = temp +  ' <a href="' + http + '" target="_blank">' + http + '</a><br/>'
+        temp = temp "<br/><h5>Graph currently under Construction</h5>"
+        #http= "http://static.cybercommons.org/queue/model/teco/" + task_id
+        return temp #http #'TECO Model run Complete'
     except:
         raise
 def set_observed_date(row):
