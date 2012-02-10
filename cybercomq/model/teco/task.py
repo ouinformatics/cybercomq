@@ -121,6 +121,9 @@ def set_observed_date(row):
     doy = timedelta(days=int(row['doy'])-1)
     observed_date = odate + doy
     row['observed_date']=observed_date
+    row['week']=observed_date.isocalendar()[1]
+    row['month']=observed_date.month
+    row['day']=row['doy']
     return row
 @task()
 def set_site_param(task_id,param):
