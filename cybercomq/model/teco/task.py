@@ -60,6 +60,23 @@ def initTECOrun(**kwargs):
     except:
         raise
 @task(serializer="json")
+def getLocations(**kwargs):
+    db = Connection('fire.rccc.ou.edu')
+    #check if site in siteparams
+    siteparam = db['teco']['siteparam'].distinct('site')
+    #check if site in forcing data
+    forcing = db['teco']['forcing'].distinct('Site')
+    sites=[]
+    for site in forcing:
+        if site in siteparam:
+            sites.append(site)
+    findloc=[]
+    #check if catalog location metadata
+    for row in sites:
+        for rr in  db['catalog']['location'].find({'loc_id':row}):
+            findloc.append(row)
+    return findloc
+@task(serializer="json")
 def getTecoinput(**kwargs):
     '''Currently setup up for demo specific input files'''
     try:
