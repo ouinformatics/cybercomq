@@ -212,7 +212,7 @@ def set_input_data(db,site,fields,wd,outfile,start,end,forc):
             opt=3
         result= db.forcing.find({'Site':site,'Year':forc_yr[1]}).sort([('observed_date',1)])
         for row in result:
-            if row['hour']==Math.ceil(row['hour']):
+            if row['hour']== math.ceil(row['hour']):
                 if opt==1:
                     fw_file(outfile,fields,wd,forc_yr[0],row['DOY'],row)
                 elif opt==2:
