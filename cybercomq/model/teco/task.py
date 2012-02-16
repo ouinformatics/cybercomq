@@ -5,7 +5,7 @@ from urllib2 import urlopen
 from cybercom.data.catalog import datalayer,dataloader
 from subprocess import call,STDOUT
 import os,commands,json,ast
-import Math
+import math
 if os.uname()[1] == 'ip-129-15-40-58.rccc.ou.edu':
     basedir = '/Users/mstacy/Desktop/TECO_HarvardForest/'
 elif os.uname()[1] == 'dhcp-162-41.rccc.ou.edu':
@@ -194,7 +194,7 @@ def set_input_data(db,site,fields,wd,outfile,start,end,forc):
     #Set result set from mongo
     result = db.forcing.find({"Site":site,"observed_date":{"$gte": start, "$lt": end}}).sort([('observed_date',1)])
     for row in result:
-        if row['hour']==Math.ceil(row['hour']):
+        if row['hour'] == math.ceil(row['hour']):
             rw=''
             for col in fields:
                 rw = rw +  str(row[col]).rjust(int(wd[fields.index(col)]),' ')
