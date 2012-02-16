@@ -5,7 +5,7 @@ from urllib2 import urlopen
 from cybercom.data.catalog import datalayer,dataloader
 from subprocess import call,STDOUT
 import os,commands,json,ast
-
+import Math
 if os.uname()[1] == 'ip-129-15-40-58.rccc.ou.edu':
     basedir = '/Users/mstacy/Desktop/TECO_HarvardForest/'
 elif os.uname()[1] == 'dhcp-162-41.rccc.ou.edu':
@@ -194,10 +194,11 @@ def set_input_data(db,site,fields,wd,outfile,start,end,forc):
     #Set result set from mongo
     result = db.forcing.find({"Site":site,"observed_date":{"$gte": start, "$lt": end}}).sort([('observed_date',1)])
     for row in result:
-        rw=''
-        for col in fields:
-            rw = rw +  str(row[col]).rjust(int(wd[fields.index(col)]),' ')
-        outfile.write(rw + '\n')
+        if row['hour']==Math.ceil(row['hour']):
+            rw=''
+            for col in fields:
+                rw = rw +  str(row[col]).rjust(int(wd[fields.index(col)]),' ')
+            outfile.write(rw + '\n')
     #forecast added to add to forcing file
     for forc_yr in forc:
         f0=isLeap(forc_yr[0])
@@ -211,25 +212,26 @@ def set_input_data(db,site,fields,wd,outfile,start,end,forc):
             opt=3
         result= db.forcing.find({'Site':site,'Year':forc_yr[1]}).sort([('observed_date',1)])
         for row in result:
-            if opt==1:
-                fw_file(outfile,fields,wd,forc_yr[0],row['DOY'],row)
-            elif opt==2:
-                if row['DOY']>= 60:
-                    if row['DOY'] == 60 and row['hour'] == 0.0:
+            if row['hour']==Math.ceil(row['hour']):
+                if opt==1:
+                    fw_file(outfile,fields,wd,forc_yr[0],row['DOY'],row)
+                elif opt==2:
+                    if row['DOY']>= 60:
+                        if row['DOY'] == 60 and row['hour'] == 0.0:
                             result228 = db.forcing.find({'Year':forc_yr[1],'DOY':59}).sort([('observed_date',1)])
                             for row28 in result228:
                                 fw_file(outfile,fields,wd,forc_yr[0],60,row28)
-                    fw_file(outfile,fields,wd,forc_yr[0],row['DOY']+1,row)
-                else:
-                    fw_file(outfile,fields,wd,forc_yr[0],row['DOY'],row)
-            else:
-                if row['DOY']>= 60:
-                    if row['DOY'] == 60:
-                        pass
+                        fw_file(outfile,fields,wd,forc_yr[0],row['DOY']+1,row)
                     else:
-                        fw_file(outfile,fields,wd,forc_yr[0],row['DOY']-1,row)
+                        fw_file(outfile,fields,wd,forc_yr[0],row['DOY'],row)
                 else:
-                    fw_file(outfile,fields,wd,forc_yr[0],row['DOY'],row)
+                    if row['DOY']>= 60:
+                        if row['DOY'] == 60:
+                            pass
+                        else:
+                            fw_file(outfile,fields,wd,forc_yr[0],row['DOY']-1,row)
+                    else:
+                        fw_file(outfile,fields,wd,forc_yr[0],row['DOY'],row)
     
             #lastrow=row
             #rw=''
