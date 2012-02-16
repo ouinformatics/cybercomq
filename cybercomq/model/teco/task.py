@@ -55,7 +55,8 @@ def initTECOrun(**kwargs):
         #Create forcing file according to input parameters
         custom_tecov2_setup(initTECOrun.request.id,site,param['inputfile'],base_yrs, forecast)
         #Set Link to file - Legacy TECO Model - Not used in fortran code but required
-        call(["ln","-s",basedir + "HarvardForest_hr_Chuixiang.txt",newDir + "/" + param['NEEfile']])
+        if site = 'US-HA1':
+            call(["ln","-s",basedir + "HarvardForest_hr_Chuixiang.txt",newDir + "/" + param['NEEfile']])
         return newDir
     except:
         raise
