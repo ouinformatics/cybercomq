@@ -53,7 +53,7 @@ def initTECOrun(**kwargs):
         #Set link to inital options file - Legacy TECO Model required
         call(["ln","-s",basedir + "initial_opt.txt",newDir + "/initial_opt.txt"])
         #Create forcing file according to input parameters
-        custom_tecov2_setup(initTECOrun.request.id, base_yrs, forecast)
+        custom_tecov2_setup(initTECOrun.request.id,site,base_yrs, forecast)
         #Set Link to file - Legacy TECO Model - Not used in fortran code but required
         call(["ln","-s",basedir + "HarvardForest_hr_Chuixiang.txt",newDir + "/HarvardForest_hr_Chuixiang.txt"])
         return newDir
@@ -105,9 +105,9 @@ def runTeco(task_id=None,**kwargs):#runDir):
         wkdir =basedir + "celery_data/" + task_id
         os.chdir(wkdir)
         logfile= open(wkdir + "/logfile.txt","w")
-        call([wkdir + "/runTeco", wkdir + "/sitepara_tcs.txt", wkdir + "/US-HA1_results.txt"],stdout=logfile,stderr=STDOUT)
-        #call(['rm',wkdir + '/runTeco'])
-        #call(['rm',wkdir + '/HarvardForest_hr_Chuixiang.txt'])
+        call(["./runTeco", wkdir + "/sitepara_tcs.txt", wkdir + "/US-HA1_results.txt"],stdout=logfile,stderr=STDOUT)
+        call(['rm',wkdir + '/runTeco'])
+        call(['rm',wkdir + '/HarvardForest_hr_Chuixiang.txt'])
         #call(['./runTeco',wkdir + "/sitepara_tcs.txt",wkdr + "/US-HA1_TECO_04.txt"])
 
        # webloc ="/static/queue/model/teco/" + task_id + ".txt"
@@ -165,7 +165,7 @@ def set_site_param(task_id,param):
     f1.write(value)
     f1.close()
 @task()
-def custom_tecov2_setup(task_id,years,forecast):
+def custom_tecov2_setup(task_id,site,years,forecast):
     # Header row
     header='Year  DOY  hour  T_air q1   Q_air  q2   Wind_speed q3     Precip   q4   Pressure   q5  R_global_in q6   R_longwave_in q7   CO2'
     head =['Year','DOY','hour','T_air','q1','Q_air','q2','Wind_speed','q3','Precip','q4','Pressure','q5',
@@ -187,11 +187,11 @@ def custom_tecov2_setup(task_id,years,forecast):
     end = datetime(yr[1] + 1,1,1)
     #safe eval forecast to list of tuples
     forc = ast.literal_eval(forecast)
-    set_input_data(db,head,wd,outfile,start,end,forc)
+    set_input_data(db,site,head,wd,outfile,start,end,forc)
 @task()
-def set_input_data(db,fields,wd,outfile,start,end,forc):
+def set_input_data(db,site,fields,wd,outfile,start,end,forc):
     #Set result set from mongo
-    result = db.forcing.find({"observed_date":{"$gte": start, "$lt": end}}).sort([('observed_date',1)])
+    result = db.forcing.find({"Site":site,"observed_date":{"$gte": start, "$lt": end}}).sort([('observed_date',1)])
     for row in result:
         rw=''
         for col in fields:
@@ -208,7 +208,7 @@ def set_input_data(db,fields,wd,outfile,start,end,forc):
             opt=2
         else:
             opt=3
-        result= db.forcing.find({'Year':forc_yr[1]}).sort([('observed_date',1)])
+        result= db.forcing.find({'Site':site,'Year':forc_yr[1]}).sort([('observed_date',1)])
         for row in result:
             if opt==1:
                 fw_file(outfile,fields,wd,forc_yr[0],row['DOY'],row)
