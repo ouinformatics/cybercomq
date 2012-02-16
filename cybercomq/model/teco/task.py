@@ -53,9 +53,9 @@ def initTECOrun(**kwargs):
         #Set link to inital options file - Legacy TECO Model required
         call(["ln","-s",basedir + "initial_opt.txt",newDir + "/initial_opt.txt"])
         #Create forcing file according to input parameters
-        custom_tecov2_setup(initTECOrun.request.id,site,base_yrs, forecast)
+        custom_tecov2_setup(initTECOrun.request.id,site,param['inputfile'],base_yrs, forecast)
         #Set Link to file - Legacy TECO Model - Not used in fortran code but required
-        call(["ln","-s",basedir + "HarvardForest_hr_Chuixiang.txt",newDir + "/HarvardForest_hr_Chuixiang.txt"])
+        call(["ln","-s",basedir + "HarvardForest_hr_Chuixiang.txt",newDir + "/" + param['NEEfile']])
         return newDir
     except:
         raise
@@ -105,9 +105,9 @@ def runTeco(task_id=None,**kwargs):#runDir):
         wkdir =basedir + "celery_data/" + task_id
         os.chdir(wkdir)
         logfile= open(wkdir + "/logfile.txt","w")
-        call(["./runTeco", wkdir + "/sitepara_tcs.txt", wkdir + "/US-HA1_results.txt"],stdout=logfile,stderr=STDOUT)
+        call(["./runTeco", wkdir + "/sitepara_tcs.txt", wkdir + "/Results.txt"],stdout=logfile,stderr=STDOUT)
         call(['rm',wkdir + '/runTeco'])
-        call(['rm',wkdir + '/HarvardForest_hr_Chuixiang.txt'])
+        #call(['rm',wkdir + '/HarvardForest_hr_Chuixiang.txt'])
         #call(['./runTeco',wkdir + "/sitepara_tcs.txt",wkdr + "/US-HA1_TECO_04.txt"])
 
        # webloc ="/static/queue/model/teco/" + task_id + ".txt"
@@ -118,7 +118,7 @@ def runTeco(task_id=None,**kwargs):#runDir):
         dld = dataloader.Mongo_load('teco',host='fire.rccc.ou.edu' )
         collection='taskresults'
         adddict ={'task_id': task_id}
-        dld.file2mongo(wkdir + "/US-HA1_results.txt",collection,file_type='fixed_width',addDict=adddict,specificOperation=set_observed_date)
+        dld.file2mongo(wkdir + "/Results.txt",collection,file_type='fixed_width',addDict=adddict,specificOperation=set_observed_date)
 
 
         #http= "http://static.cybercommons.org/queue/model/teco/" + task_id + ".txt"
@@ -165,7 +165,7 @@ def set_site_param(task_id,param):
     f1.write(value)
     f1.close()
 @task()
-def custom_tecov2_setup(task_id,site,years,forecast):
+def custom_tecov2_setup(task_id,site,filename,years,forecast):
     # Header row
     header='Year  DOY  hour  T_air q1   Q_air  q2   Wind_speed q3     Precip   q4   Pressure   q5  R_global_in q6   R_longwave_in q7   CO2'
     head =['Year','DOY','hour','T_air','q1','Q_air','q2','Wind_speed','q3','Precip','q4','Pressure','q5',
@@ -177,7 +177,7 @@ def custom_tecov2_setup(task_id,site,years,forecast):
     #wkdir = "/home/mstacy/test"
     os.chdir(wkdir)
     #open file and set header
-    outfile = open("US-Ha1forcing.txt","w")
+    outfile = open(filename,"w")
     outfile.write(header + '\n\n')
     #open mongo connection
     db = Connection('fire.rccc.ou.edu').teco
