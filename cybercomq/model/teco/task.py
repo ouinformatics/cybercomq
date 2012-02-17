@@ -51,7 +51,7 @@ def initTECOrun(**kwargs):
         #Set paramater file - Legacy TECO Model
         set_site_param(initTECOrun.request.id,param)
         #Set link to inital options file - Legacy TECO Model required
-        call(["ln","-s",basedir + "initial_opt.txt",newDir + "/initial_opt.txt"])
+        #call(["ln","-s",basedir + "initial_opt.txt",newDir + "/initial_opt.txt"])
         #Create forcing file according to input parameters
         custom_tecov2_setup(initTECOrun.request.id,site,param['inputfile'],base_yrs, forecast)
         #Set Link to file - Legacy TECO Model - Not used in fortran code but required
@@ -77,23 +77,23 @@ def getLocations(**kwargs):
         for rr in  db['catalog']['location'].find({'loc_id':row}):
             findloc.append(row)
     return findloc
-@task(serializer="json")
-def getTecoinput(**kwargs):
-    '''Currently setup up for demo specific input files'''
-    try:
-        md=datalayer.Metadata()
-        sWhere = "var_id = 'URL' and event_id in (select event_id from dt_event where cat_id = %d or cat_id = %d) " % (1446799,1446801) 
-        res = md.Search('dt_result',where=sWhere,column=['var_id','result_text'])
-        for url in res:
-            temp= url['result_text'].split("/")
-            fname = temp[len(temp)-1]
-            filepath = basedir + fname
-            a = urlopen(url['result_text'])
-            f1= open(filepath,'w')
-            f1.write(a.read())
-        return True 
-    except:
-        raise
+#@task(serializer="json")
+#def getTecoinput(**kwargs):
+#    '''Currently setup up for demo specific input files'''
+#    try:
+#        md=datalayer.Metadata()
+#        sWhere = "var_id = 'URL' and event_id in (select event_id from dt_event where cat_id = %d or cat_id = %d) " % (1446799,1446801) 
+#        res = md.Search('dt_result',where=sWhere,column=['var_id','result_text'])
+#        for url in res:
+#            temp= url['result_text'].split("/")
+#            fname = temp[len(temp)-1]
+#            filepath = basedir + fname
+#            a = urlopen(url['result_text'])
+#            f1= open(filepath,'w')
+#            f1.write(a.read())
+#        return True 
+#    except:
+#        raise
 @task()
 def runTeco(task_id=None,**kwargs):#runDir):
     ''' run teco model 
@@ -143,17 +143,23 @@ def set_observed_date(row):
     row['month']=observed_date.month
     row['day']=row['doy']
     return row
-@task()
+
 def set_site_param(task_id,param):
     ''' Param is a dictionary with the paramiters'''
     head =[ 'site','vegtype','inputfile','NEEfile','outputfile','lat','Longitude','wsmax','wsmin','gddonset',
             'LAIMAX','LAIMIN','rdepth','Rootmax','Stemmax','SapR','SapS','SLA','GLmax','GRmax','Gsmax','stom_n',
             'a1','Ds0','Vcmx0','extkU','xfang','alpha','co2ca','Tau_Leaf','Tau_Wood','Tau_Root','Tau_F','Tau_C',
             'Tau_Micro','Tau_SlowSOM','Tau_Passive']
+    inithead =[ 'wsmax','wsmin','gddonset','LAIMAX','LAIMIN','rdepth','Rootmax','Stemmax','SapR','SapS','SLA','GLmax',
+            'GRmax','Gsmax','a1','Ds0','Vcmx0','alpha','Tau_Leaf','Tau_Wood','Tau_Root','Tau_F','Tau_C',
+            'Tau_Micro','Tau_SlowSOM','Tau_Passive']
+    addInitfile = ['TminV','TmaxV','ToptV','Tcold','Gamma_Wmax','Gamma_Tmax']
+    workaround ="47.934\n32.963\n10.733\n0.00015\n0.00161\n0.51041\n"
     wkdir =basedir + "celery_data/" + task_id
     os.chdir(wkdir)
     header =''
     value=''
+    initvalue=''
     for col in head:
         if col =="Tau_Passive":
             header = header + col + "\n"
@@ -165,7 +171,12 @@ def set_site_param(task_id,param):
     f1.write(header)
     f1.write(value)
     f1.close()
-@task()
+    for col in inithead:
+        intvalue= initvalue + str(param[col]) + "\n"
+    f2 = open('initial_opt.txt','w')
+    f2.write(initvalue)
+    f2.write(workaround)
+    f2.close()
 def custom_tecov2_setup(task_id,site,filename,years,forecast):
     # Header row
     header='Year  DOY  hour  T_air q1   Q_air  q2   Wind_speed q3     Precip   q4   Pressure   q5  R_global_in q6   R_longwave_in q7   CO2'
@@ -189,7 +200,7 @@ def custom_tecov2_setup(task_id,site,filename,years,forecast):
     #safe eval forecast to list of tuples
     forc = ast.literal_eval(forecast)
     set_input_data(db,site,head,wd,outfile,start,end,forc)
-@task()
+
 def set_input_data(db,site,fields,wd,outfile,start,end,forc):
     #Set result set from mongo
     result = db.forcing.find({"Site":site,"observed_date":{"$gte": start, "$lt": end}}).sort([('observed_date',1)])
@@ -263,7 +274,3 @@ def isLeap(year):
             return True     
     else:
         return False 
-@task()
-def sleep(s):
-    time.sleep(s)
-    return None
