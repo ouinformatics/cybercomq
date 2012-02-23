@@ -77,9 +77,9 @@ def convertRaster(inputf,output,format="IMAGINE Image"):
     logging.info("Converting raster...")
     arcpy.RasterToOtherFormat_conversion(inputf,tempdir,format)
     
-def circleClip(inputf, location, output, tmpdir):
+def circleClip(inputf, location, output, tempdir):
     """ Clip a circle out of a raster """
-    arcpy.evn.workspace = tmpdir
+    arcpy.evn.workspace = tempdir
     size = "50 Kilometers"
     buffer_ring = 'buffer_ring.shp'
     logging.info("Buffering...")
@@ -168,7 +168,7 @@ def runClustering(timestep, roost="-96.60,33.0", log=True):
     unqc_cref_clipped ='clipped_' + os.path.basename(unqc_cref)
     unqc_cref_scaled = 'scaled_' + os.path.basename(unqc_cref)
     unqc_cref_vect = os.path.join(tempdir, 'points.shp')
-    circleClip(unqc_cref, loc, unqc_cref_clipped, tmpdir)
+    circleClip(unqc_cref, loc, unqc_cref_clipped, tempdir)
     scaleRaster(unqc_cref_clipped, unqc_cref_scaled)
     vect_out = rasterToPoint(unqc_cref_scaled,unqc_cref_vect)
     hotSpotAnalysis(vect_out,'hotspots.shp',tempdir, 10)
