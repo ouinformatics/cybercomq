@@ -77,10 +77,11 @@ def convertRaster(inputf,output,format="IMAGINE Image"):
     logging.info("Converting raster...")
     arcpy.RasterToOtherFormat_conversion(inputf,tempdir,format)
     
-def circleClip(inputf, location, output):
+def circleClip(inputf, location, output, tmpdir):
     """ Clip a circle out of a raster """
     size = "50 Kilometers"
-    buffer_ring = 'buffer_ring.shp'
+    buffer_ring = os.path.join(tmpdir,'buffer_ring.shp')
+    output = os.path.join(tmpdir,output)
     logging.info("Buffering...")
     arcpy.Buffer_analysis(location, buffer_ring, size, "FULL", "ROUND", "NONE")
     logging.info("Clipping...")
