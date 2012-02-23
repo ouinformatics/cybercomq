@@ -152,13 +152,13 @@ def nearAnalysis(inputf, location, search_distance=None):
         search_distance = "20 Kilometers"
     arcpy.Near_analysis(inputf, location, search_distance, "NO_LOCATION","ANGLE")
     
-def runClustering(timestep, roost=(-96.60, 33.0), log=True):
+def runClustering(timestep, roost="-96.60,33.0", log=True):
     arcpy.env.workspace = tempfile.mkdtemp()
     unqc_cref = getScene(timestep, roost)
     if log:
         logging.basicConfig(filename=os.path.join(arcpy.env.workspace,'hotspot.log'),
         level=logging.INFO, format='%(asctime)s %(message)s')
-    lon,lat = roost
+    lon,lat = roost.split(',')
     location = arcpy.Point(lon,lat)
     loc = inMemoryPoint(location)
     unqc_grid = unqc_cref.replace('.tif','.img')
