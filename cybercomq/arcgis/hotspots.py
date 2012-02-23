@@ -37,7 +37,7 @@ def getVRT(timestep, product, directory):
 
 def mkwin(location, rad):
     """ Make a window suitable for "-projwin" in gdal_translate """
-    lon, lat = location.split(',')
+    lon, lat = [ int(item) for item in location.split(',') ]
     ulx = lon - rad
     uly = lat + rad
     llx = lon + rad
