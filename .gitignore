@@ -1,2 +1,12 @@
 *.swp
 *.pyc
+
+cybercomq.egg-info/PKG-INFO
+
+cybercomq.egg-info/dependency_links.txt
+
+cybercomq.egg-info/SOURCES.txt
+
+cybercomq.egg-info/top_level.txt
+
+cybercomq/static/celeryconfig.py
