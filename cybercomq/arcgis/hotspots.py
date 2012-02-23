@@ -72,6 +72,21 @@ def inMemoryPoint(location):
     featSet.load(fc)
     return fc
 
+def makePoint(lon,lat, outdir):
+    location = dict(lon=lon,lat=lat)
+    geojson_template = """{ "type": "FeatureCollection", "features": [
+    { "type": "Feature",
+      "geometry": {"type": "Point", "coordinates": [%(lon)s, %(lat)s]},
+      "properties": {"prop0": "value0"}
+      } ]
+    }"""
+    of = open(os.path.join(outdir,'point.json'), 'w')
+    of.write(geojson_template % location)
+    of.close()
+    subprocess.call(['ogr2ogr','-f','ESRI Shapefile', os.path.join(outdir,'point.shp'),os.path.join(outdir,'point.json')])
+    return os.path.join(outdir,'point.shp')
+
+
 def convertRaster(inputf,output,format="IMAGINE Image"):
     """ Convert raster format """
     logging.info("Converting raster...")
@@ -161,8 +176,11 @@ def runClustering(timestep, roost="-96.60,33.0", log=True):
     #    logging.basicConfig(filename=os.path.join(tempdir,'hotspot.log'),
     #    level=logging.INFO, format='%(asctime)s %(message)s')
     lon,lat = roost.split(',')
-    location = arcpy.Point(lon,lat)
-    loc = inMemoryPoint(location)
+    logging.info('Trying to make in memory point...')
+    #location = arcpy.Point(lon,lat)
+    #loc = inMemoryPoint(location)
+    loc = makePoint(lon,lat,tempdir)
+    logging.info('Made in memory point...')
     unqc_grid = unqc_cref.replace('.tif','.img')
     #convertRaster(unqc_cref,unqc_grid)
     unqc_cref_clipped ='clipped_' + os.path.basename(unqc_cref)
