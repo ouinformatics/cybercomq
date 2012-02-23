@@ -79,7 +79,7 @@ def convertRaster(inputf,output,format="IMAGINE Image"):
     
 def circleClip(inputf, location, output, tempdir):
     """ Clip a circle out of a raster """
-    arcpy.evn.workspace = tempdir
+    arcpy.env.workspace = tempdir
     size = "50 Kilometers"
     buffer_ring = 'buffer_ring.shp'
     logging.info("Buffering...")
@@ -157,9 +157,9 @@ def runClustering(timestep, roost="-96.60,33.0", log=True):
     #arcpy.env.workspace = tempfile.mkdtemp()
     tempdir = tempfile.mkdtemp()
     unqc_cref = getScene(timestep, roost, tempdir)
-    if log:
-        logging.basicConfig(filename=os.path.join(tempdir,'hotspot.log'),
-        level=logging.INFO, format='%(asctime)s %(message)s')
+    #if log:
+    #    logging.basicConfig(filename=os.path.join(tempdir,'hotspot.log'),
+    #    level=logging.INFO, format='%(asctime)s %(message)s')
     lon,lat = roost.split(',')
     location = arcpy.Point(lon,lat)
     loc = inMemoryPoint(location)
