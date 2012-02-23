@@ -52,9 +52,9 @@ def extractScene(vrtfile,location,radius):
     subprocess.call(args)
     return vrtfile.replace('.vrt','.img')
 
-def getScene(timestep, location, radius=1.0):
+def getScene(timestep, location, tempdir, radius=1.0):
     product = 'unqc_cref'
-    vrt = getVRT(timestep, product, arcpy.env.workspace)
+    vrt = getVRT(timestep, product, tempdir)
     return extractScene(vrt, location, radius)
 	
 def inMemoryPoint(location):
@@ -75,7 +75,7 @@ def inMemoryPoint(location):
 def convertRaster(inputf,output,format="IMAGINE Image"):
     """ Convert raster format """
     logging.info("Converting raster...")
-    arcpy.RasterToOtherFormat_conversion(inputf,arcpy.env.workspace,format)
+    arcpy.RasterToOtherFormat_conversion(inputf,tempdir,format)
     
 def circleClip(inputf, location, output):
     """ Clip a circle out of a raster """
@@ -114,7 +114,7 @@ def shp2GeoJSON(inputf, output, where=None):
         command.append('-where %s' % where)
     subprocess.call(command)
     
-def hotSpotAnalysis(inputf, output, gizscore=None):
+def hotSpotAnalysis(inputf, output, tempdir, gizscore=None):
     """
     Perform Getis Ord hotspot analysis and optionally threshold output by gizscore,
         including only those points greater than threshold.
@@ -126,7 +126,7 @@ def hotSpotAnalysis(inputf, output, gizscore=None):
         arcpy.HotSpotsRendered_stats(inputf, "GRID_CODE", output.replace('.shp','.lyr'), tmp_out, "")
         gizscore_str = '\"GiZScore\" >= %s' % gizscore
         logging.info('Thresholding output...')
-        arcpy.FeatureClassToFeatureClass_conversion(tmp_out, arcpy.env.workspace, output.replace('.shp',''), gizscore_str)
+        arcpy.FeatureClassToFeatureClass_conversion(tmp_out, tempdir, output.replace('.shp',''), gizscore_str)
         logging.info('Cleaning up...')
         arcpy.Delete_management(tmp_out)
     else:
@@ -153,10 +153,11 @@ def nearAnalysis(inputf, location, search_distance=None):
     arcpy.Near_analysis(inputf, location, search_distance, "NO_LOCATION","ANGLE")
     
 def runClustering(timestep, roost="-96.60,33.0", log=True):
-    arcpy.env.workspace = tempfile.mkdtemp()
-    unqc_cref = getScene(timestep, roost)
+    #arcpy.env.workspace = tempfile.mkdtemp()
+    tempdir = tempfile.mkdtemp()
+    unqc_cref = getScene(timestep, roost, tempdir)
     if log:
-        logging.basicConfig(filename=os.path.join(arcpy.env.workspace,'hotspot.log'),
+        logging.basicConfig(filename=os.path.join(tempdir,'hotspot.log'),
         level=logging.INFO, format='%(asctime)s %(message)s')
     lon,lat = roost.split(',')
     location = arcpy.Point(lon,lat)
@@ -165,14 +166,14 @@ def runClustering(timestep, roost="-96.60,33.0", log=True):
     #convertRaster(unqc_cref,unqc_grid)
     unqc_cref_clipped ='clipped_' + os.path.basename(unqc_cref)
     unqc_cref_scaled = 'scaled_' + os.path.basename(unqc_cref)
-    unqc_cref_vect = os.path.join(arcpy.env.workspace, 'points.shp')
+    unqc_cref_vect = os.path.join(tempdir, 'points.shp')
     circleClip(unqc_cref, loc, unqc_cref_clipped)
     scaleRaster(unqc_cref_clipped, unqc_cref_scaled)
     vect_out = rasterToPoint(unqc_cref_scaled,unqc_cref_vect)
-    hotSpotAnalysis(vect_out,'hotspots.shp',10)
+    hotSpotAnalysis(vect_out,'hotspots.shp',tempdir, 10)
     aggregatePoints('hotspots.shp', 'hotspot_areas.shp')
     nearAnalysis('hotspot_areas.shp', loc)
-    shp2GeoJSON(os.path.join(arcpy.env.workspace,'hotspot_areas.shp'),os.path.join(arcpy.env.workspace,'hotspot_areas.json'))
+    shp2GeoJSON(os.path.join(tempdir,'hotspot_areas.shp'),os.path.join(tempdir,'hotspot_areas.json'))
 
 if __name__ == '__main__':
     runClustering(sys.argv[1])
