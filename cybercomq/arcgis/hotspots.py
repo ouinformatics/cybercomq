@@ -74,6 +74,7 @@ def inMemoryPoint(location):
 
 def makePoint(lon,lat, outdir):
     location = dict(lon=lon,lat=lat)
+    logging.info('Creating point...')
     geojson_template = """{ "type": "FeatureCollection", "features": [
     { "type": "Feature",
       "geometry": {"type": "Point", "coordinates": [%(lon)s, %(lat)s]},
@@ -84,6 +85,7 @@ def makePoint(lon,lat, outdir):
     of.write(geojson_template % location)
     of.close()
     subprocess.call(['ogr2ogr','-f','ESRI Shapefile', os.path.join(outdir,'point.shp'),os.path.join(outdir,'point.json')])
+    logging.info('Point created...')
     return os.path.join(outdir,'point.shp')
 
 
