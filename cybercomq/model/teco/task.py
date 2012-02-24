@@ -172,7 +172,7 @@ def set_site_param(task_id,param):
     f1.write(value)
     f1.close()
     for col in inithead:
-        initvalue= initvalue + str(float(param[col])) + "\n"
+        initvalue= initvalue + str(param[col]) + "\n"
     f2 = open('initial_opt.txt','w')
     f2.write(initvalue)
     f2.write(workaround)
