@@ -15,8 +15,10 @@ except NameError:
 # bring in needed libs
 import sys
 import os
+from os import environ
 import tempfile, logging, random, subprocess, shlex
 from urllib import urlopen
+from celery.task import task
 
 # Set up spatial reference
 sr = arcpy.SpatialReference()
@@ -169,9 +171,25 @@ def nearAnalysis(inputf, location, search_distance=None):
     if not search_distance:
         search_distance = "20 Kilometers"
     arcpy.Near_analysis(inputf, location, search_distance, "NO_LOCATION","ANGLE")
-    
+
+def source(script,update=1):
+    pipe = subprocess.Popen('. %s' % script, stdout=subprocess.PIPE, shell=True)
+    data = pipe.communicate()[0]
+    env = dict((line.split("=", 1) for line in data.splitlines()))
+    if update:
+        environ.update(env)
+    return env
+
+@task
+def runCall(timestep, roost):
+    subprocess.call(['/home/arcgis/virtpy/lib/python2.6/site-packages/cybercomq/arcgis/hotspots.py', timestep, roost])
+
+@task 
 def runClustering(timestep, roost="-96.60,33.0", log=True):
     #arcpy.env.workspace = tempfile.mkdtemp()
+    environ['DISPLAY'] = ':600'
+    source('/opt/arcgis/server10.0/servercore/.Server/init_server.sh')
+    source('/opt/arcgis/server10.0/python26/setenv_python.sh')
     tempdir = tempfile.mkdtemp()
     unqc_cref = getScene(timestep, roost, tempdir)
     #if log:
