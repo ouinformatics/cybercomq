@@ -17,6 +17,7 @@ import sys
 import os
 from os import environ
 import tempfile, logging, random, subprocess, shlex
+from datetime import datetime, timedelta
 from urllib import urlopen
 from celery.task import task
 
@@ -153,7 +154,6 @@ def hotSpotAnalysis(inputf, output, tempdir, gizscore=None):
         logging.info('Performing hostpot analysis...')
         arcpy.HotSpotsRendered_stats(inputf, "GRID_CODE", output.replace('.shp','.lyr'), output, "")
         
-
 def aggregatePoints(inputf, output, cluster_distance=None):
     """ 
     Aggregate points which are highly spatially autocorrelated
@@ -180,11 +180,6 @@ def source(script,update=1):
         environ.update(env)
     return env
 
-@task
-def runCall(timestep, roost):
-    subprocess.call(['/home/arcgis/virtpy/lib/python2.6/site-packages/cybercomq/arcgis/hotspots.py', timestep, roost])
-
-@task 
 def runClustering(timestep, roost="-96.60,33.0", log=True):
     #arcpy.env.workspace = tempfile.mkdtemp()
     environ['DISPLAY'] = ':600'
@@ -196,11 +191,11 @@ def runClustering(timestep, roost="-96.60,33.0", log=True):
     #    logging.basicConfig(filename=os.path.join(tempdir,'hotspot.log'),
     #    level=logging.INFO, format='%(asctime)s %(message)s')
     lon,lat = roost.split(',')
-    logging.info('Trying to make in memory point...')
+    logging.info('Creating point geometry...')
     #location = arcpy.Point(lon,lat)
     #loc = inMemoryPoint(location)
     loc = makePoint(lon,lat,tempdir)
-    logging.info('Made in memory point...')
+    logging.info('Finished point geometry...')
     unqc_grid = unqc_cref.replace('.tif','.img')
     #convertRaster(unqc_cref,unqc_grid)
     unqc_cref_clipped ='clipped_' + os.path.basename(unqc_cref)
@@ -214,5 +209,20 @@ def runClustering(timestep, roost="-96.60,33.0", log=True):
     nearAnalysis('hotspot_areas.shp', loc)
     shp2GeoJSON(os.path.join(tempdir,'hotspot_areas.shp'),os.path.join(tempdir,'hotspot_areas.json'))
 
+def date_range(start_datetime, end_datetime):
+    ''' Generator for datetime_ranges at 5 minute intervals '''
+    d = start_datetime
+    delta = timedelta(minutes=5)
+    while d <= end_datetime:
+        yield d.strftime('%Y%m%d.%H%M%S')
+        d += delta
+
+def runRange(start_time, stop_time, roost):
+    start = datetime.strptime(start_time, '%Y%m%d.%H%M%S')
+    stop = datetime.strptime(stop_time, '%Y%m%d.%H%M%S')
+    for date in date_range(start,stop):
+        logging.info('Processing %s at %s' % (date,roost))
+        runClustering(date, roost)
+
 if __name__ == '__main__':
-    runClustering(sys.argv[1])
+    runRange(sys.argv[1],sys.argv[2],sys.argv[3])
