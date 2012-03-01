@@ -152,9 +152,9 @@ def set_site_param(task_id,param):
             'Tau_Micro','Tau_SlowSOM','Tau_Passive']
     inithead =[ 'wsmax','wsmin','gddonset','LAIMAX','LAIMIN','rdepth','Rootmax','Stemmax','SapR','SapS','SLA','GLmax',
             'GRmax','Gsmax','a1','Ds0','Vcmx0','alpha','Tau_Leaf','Tau_Wood','Tau_Root','Tau_F','Tau_C',
-            'Tau_Micro','Tau_SlowSOM','Tau_Passive']
-    addInitfile = ['TminV','TmaxV','ToptV','Tcold','Gamma_Wmax','Gamma_Tmax']
-    workaround ="-6.3833\n47.934\n32.963\n10.733\n0.00015\n0.00161\n"#0.51041\n"
+            'Tau_Micro','Tau_SlowSOM','Tau_Passive','TminV','TmaxV','ToptV','Tcold','Gamma_Wmax','Gamma_Tmax']
+    #addInitfile = ['TminV','TmaxV','ToptV','Tcold','Gamma_Wmax','Gamma_Tmax']
+    #workaround ="-6.3833\n47.934\n32.963\n10.733\n0.00015\n0.00161\n"#0.51041\n"
     wkdir =basedir + "celery_data/" + task_id
     os.chdir(wkdir)
     header =''
@@ -175,7 +175,7 @@ def set_site_param(task_id,param):
         initvalue= initvalue + str(param[col]) + "\n"
     f2 = open('initial_opt.txt','w')
     f2.write(initvalue)
-    f2.write(workaround)
+    #f2.write(workaround)
     f2.close()
 def custom_tecov2_setup(task_id,site,filename,years,forecast):
     # Header row
