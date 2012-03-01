@@ -15,8 +15,11 @@ except NameError:
 # bring in needed libs
 import sys
 import os
+from os import environ
 import tempfile, logging, random, subprocess, shlex
+from datetime import datetime, timedelta
 from urllib import urlopen
+from celery.task import task
 
 # Set up spatial reference
 sr = arcpy.SpatialReference()
@@ -71,6 +74,23 @@ def inMemoryPoint(location):
     featSet = arcpy.FeatureSet()
     featSet.load(fc)
     return fc
+
+def makePoint(lon,lat, outdir):
+    location = dict(lon=lon,lat=lat)
+    logging.info('Creating point...')
+    geojson_template = """{ "type": "FeatureCollection", "features": [
+    { "type": "Feature",
+      "geometry": {"type": "Point", "coordinates": [%(lon)s, %(lat)s]},
+      "properties": {"prop0": "value0"}
+      } ]
+    }"""
+    of = open(os.path.join(outdir,'point.json'), 'w')
+    of.write(geojson_template % location)
+    of.close()
+    subprocess.call(['ogr2ogr','-f','ESRI Shapefile', os.path.join(outdir,'point.shp'),os.path.join(outdir,'point.json')])
+    logging.info('Point created...')
+    return os.path.join(outdir,'point.shp')
+
 
 def convertRaster(inputf,output,format="IMAGINE Image"):
     """ Convert raster format """
@@ -134,7 +154,6 @@ def hotSpotAnalysis(inputf, output, tempdir, gizscore=None):
         logging.info('Performing hostpot analysis...')
         arcpy.HotSpotsRendered_stats(inputf, "GRID_CODE", output.replace('.shp','.lyr'), output, "")
         
-
 def aggregatePoints(inputf, output, cluster_distance=None):
     """ 
     Aggregate points which are highly spatially autocorrelated
@@ -152,17 +171,31 @@ def nearAnalysis(inputf, location, search_distance=None):
     if not search_distance:
         search_distance = "20 Kilometers"
     arcpy.Near_analysis(inputf, location, search_distance, "NO_LOCATION","ANGLE")
-    
+
+def source(script,update=1):
+    pipe = subprocess.Popen('. %s' % script, stdout=subprocess.PIPE, shell=True)
+    data = pipe.communicate()[0]
+    env = dict((line.split("=", 1) for line in data.splitlines()))
+    if update:
+        environ.update(env)
+    return env
+
 def runClustering(timestep, roost="-96.60,33.0", log=True):
     #arcpy.env.workspace = tempfile.mkdtemp()
+    environ['DISPLAY'] = ':600'
+    source('/opt/arcgis/server10.0/servercore/.Server/init_server.sh')
+    source('/opt/arcgis/server10.0/python26/setenv_python.sh')
     tempdir = tempfile.mkdtemp()
     unqc_cref = getScene(timestep, roost, tempdir)
     #if log:
     #    logging.basicConfig(filename=os.path.join(tempdir,'hotspot.log'),
     #    level=logging.INFO, format='%(asctime)s %(message)s')
     lon,lat = roost.split(',')
-    location = arcpy.Point(lon,lat)
-    loc = inMemoryPoint(location)
+    logging.info('Creating point geometry...')
+    #location = arcpy.Point(lon,lat)
+    #loc = inMemoryPoint(location)
+    loc = makePoint(lon,lat,tempdir)
+    logging.info('Finished point geometry...')
     unqc_grid = unqc_cref.replace('.tif','.img')
     #convertRaster(unqc_cref,unqc_grid)
     unqc_cref_clipped ='clipped_' + os.path.basename(unqc_cref)
@@ -176,5 +209,20 @@ def runClustering(timestep, roost="-96.60,33.0", log=True):
     nearAnalysis('hotspot_areas.shp', loc)
     shp2GeoJSON(os.path.join(tempdir,'hotspot_areas.shp'),os.path.join(tempdir,'hotspot_areas.json'))
 
+def date_range(start_datetime, end_datetime):
+    ''' Generator for datetime_ranges at 5 minute intervals '''
+    d = start_datetime
+    delta = timedelta(minutes=5)
+    while d <= end_datetime:
+        yield d.strftime('%Y%m%d.%H%M%S')
+        d += delta
+
+def runRange(start_time, stop_time, roost):
+    start = datetime.strptime(start_time, '%Y%m%d.%H%M%S')
+    stop = datetime.strptime(stop_time, '%Y%m%d.%H%M%S')
+    for date in date_range(start,stop):
+        logging.info('Processing %s at %s' % (date,roost))
+        runClustering(date, roost)
+
 if __name__ == '__main__':
-    runClustering(sys.argv[1])
+    runRange(sys.argv[1],sys.argv[2],sys.argv[3])
