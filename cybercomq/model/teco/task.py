@@ -153,6 +153,7 @@ def set_site_param(task_id,param):
     inithead =[ 'wsmax','wsmin','gddonset','LAIMAX','LAIMIN','rdepth','Rootmax','Stemmax','SapR','SapS','SLA','GLmax',
             'GRmax','Gsmax','a1','Ds0','Vcmx0','alpha','Tau_Leaf','Tau_Wood','Tau_Root','Tau_F','Tau_C',
             'Tau_Micro','Tau_SlowSOM','Tau_Passive','TminV','TmaxV','ToptV','Tcold','Gamma_Wmax','Gamma_Tmax']
+    carboncol=['nsc','Q_leaf','Q_wood','Q_root1','Q_root2','Q_root3','Q_coarse','Q_fine','Q_micr','Q_slow','Q_pass']
     #addInitfile = ['TminV','TmaxV','ToptV','Tcold','Gamma_Wmax','Gamma_Tmax']
     #workaround ="-6.3833\n47.934\n32.963\n10.733\n0.00015\n0.00161\n"#0.51041\n"
     wkdir =basedir + "celery_data/" + task_id
@@ -173,6 +174,11 @@ def set_site_param(task_id,param):
     f1.close()
     for col in inithead:
         initvalue= initvalue + str(param[col]) + "\n"
+    try:
+        for col in carboncol:
+            initvalue= initvalue + str(param[col]) + "\n"
+    except:
+        pass
     f2 = open('initial_opt.txt','w')
     f2.write(initvalue)
     #f2.write(workaround)
