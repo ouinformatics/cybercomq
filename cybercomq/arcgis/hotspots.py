@@ -162,6 +162,29 @@ def hotSpotAnalysis(inputf, output, tempdir, gizscore=None):
         logging.error("Something happened during %s" % funcname())
         logging.error(sys.exc_info())
 
+def gdal2points(filename):
+    raster = gdal.Open(filename)
+    skip = 1
+    srcwin = (0,0,raster.RasterXSize, raster.RasterYSize)
+    gt = raster.GetGeoTransform()
+    band = raster.GetRasterBand()
+    format = '%s %s'
+    line = []
+    for y in range(srcwin[1], srcwin[1]+srcwin[3], skip):
+        data=[]
+        band_data=band.ReadAsArray(srcwin[0], y, srcwin[2],1)
+        band_data=np.reshape( band_data, (srcwin[2],))
+        data = band_data
+        for x_i in range(0, srcwin[2],skip):
+            x = x_i + srcwin[0]
+            geo_x = gt[0] + (x+0.5) * gt[1] + (y+0.5) * gt[2]
+            geo_y = gt[3] + (x+0.5) * gt[4] + (y+0.5) * gt[5]
+            line.append({"xy":(float(geo_x),float(geo_y)), "val": data[x_i]} )
+        return line
+
+def GetisOrd( ):
+    pass
+    
         
 def aggregatePoints(inputf, output, cluster_distance=None):
     """ 
@@ -190,6 +213,7 @@ def nearAnalysis(inputf, location, search_distance=None):
         logging.error(sys.exc_info())
 
 def zonalStats(inputf,raster):
+    """ Run zonal statistics """
     try:
         logging.info("Computing zonal statistics...")
         output = os.path.join(os.path.dirname(inputf),'zonalstats.dbf')
@@ -204,6 +228,7 @@ def zonalStats(inputf,raster):
 
 
 def source(script,update=1):
+    """ Source a script in a shell environment""" 
     try:
         pipe = subprocess.Popen('. %s' % script, stdout=subprocess.PIPE, shell=True)
         data = pipe.communicate()[0]
