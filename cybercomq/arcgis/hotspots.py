@@ -8,9 +8,9 @@ source /opt/arcgis/server10.0/python26/setenv_python.sh
 
 # Try to avoid multiple arcpy imports as it just slows things down.
 try:
-	arcpy
+    arcpy
 except NameError:
-	import arcpy
+    import arcpy
 
 # bring in needed libs
 import sys
