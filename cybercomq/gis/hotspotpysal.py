@@ -1,21 +1,22 @@
 from osgeo import gdal
 from celery.task import task, TaskSet
 #from matplotlib import pyplot as plt
+from celery.execute import send_task
 import pandas
+import numpy
 from numpy import ma
 from pysal.weights.Distance import DistanceBand, Kernel
 from pysal.weights.user import adaptive_kernelW
 import pysal
 from pysal import threshold_binaryW_from_array, knnW
-import numpy
 numpy.random.seed(10)
 from pysal.esda.getisord import G_Local
 from scipy import ndimage
 from shapely.geometry import MultiPoint
+import time, sys, inspect, json
+import geojson
 from datetime import datetime, timedelta
 import pymongo
-import time, sys, inspect, json
-from celery.execute import send_task
 
 def funcname():
     return inspect.stack()[1][3]
@@ -129,7 +130,7 @@ def cleanup(filename):
     shutil.rmtree(os.path.dirname(filename))
 
 @task
-def hotspots(timestep, location, distance=5, zFilter_lt=1, minpixels=5):
+def hotspots(timestep, location, distance=5, zFilter_lt=1, minpixels=5, task_id=None):
     logging.info('Startting...')
     start=time.time()
     filename = stageData(timestep,location)
@@ -167,11 +168,14 @@ def hotspots(timestep, location, distance=5, zFilter_lt=1, minpixels=5):
                             'zmin': float(zvalues.min()),
                             'zmean': float(zvalues.mean()),
                             'zmedian': float(numpy.median(zvalues)),
-                            'zstd': float(zvalues.std())
+                            'zstd': float(zvalues.std()),
+                            'tsid': i,
+                            'task_id': task_id
                         }
                 cvhull = MultiPoint( list(points.compressed())).convex_hull
-                doc = {'timestep': timestep, 'loc': location, 'geom': cvhull.to_wkt(), 'stats': stats }
-                con['bioscatter']['pysal'].insert(doc)
+                stats.update({'timestep':timestep, 'loc': location}) 
+                outdoc = json.loads(geojson.dumps(geojson.Feature(id=int(str(timestep.replace('.','')) + str(i).zfill(3)), geometry=json.loads(geojson.dumps(cvhull)), properties=stats)))
+                con['bioscatter']['pysal'].insert(outdoc)
     logging.info('It took us %s seconds to process GetisOrd*' % (time.time() - start))
     return 'Success'
 
@@ -187,5 +191,6 @@ def date_range(start_datetime, end_datetime):
 def hotspotsRange(start_time, stop_time, location, **kwargs):
     start = datetime.strptime(start_time, '%Y%m%d.%H%M%S')
     stop = datetime.strptime(stop_time, '%Y%m%d.%H%M%S')
+    kwargs.update({'task_id': hotspotsRange.request.id})
     subtasks = [ send_task("cybercomq.gis.hotspotpysal.hotspots", args=(ts,location), kwargs=kwargs, queue="gis", track_started=True).task_id for ts in date_range(start,stop) ]
     return subtasks  
