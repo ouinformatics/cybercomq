@@ -10,3 +10,7 @@ cybercomq.egg-info/SOURCES.txt
 cybercomq.egg-info/top_level.txt
 
 cybercomq/static/celeryconfig.py
+
+cybercomq/.DS_Store
+
+.DS_Store
