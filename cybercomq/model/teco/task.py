@@ -145,7 +145,7 @@ def set_observed_date(row):
     return row
 
 def set_site_param(task_id,param):
-    ''' Param is a dictionary with the paramiters'''
+    ''' Param is a dictionary with the site paramiters'''
     head =[ 'site','vegtype','inputfile','NEEfile','outputfile','lat','Longitude','wsmax','wsmin','gddonset',
             'LAIMAX','LAIMIN','rdepth','Rootmax','Stemmax','SapR','SapS','SLA','GLmax','GRmax','Gsmax','stom_n',
             'a1','Ds0','Vcmx0','extkU','xfang','alpha','co2ca','Tau_Leaf','Tau_Wood','Tau_Root','Tau_F','Tau_C',
@@ -153,7 +153,7 @@ def set_site_param(task_id,param):
     inithead =[ 'wsmax','wsmin','gddonset','LAIMAX','LAIMIN','rdepth','Rootmax','Stemmax','SapR','SapS','SLA','GLmax',
             'GRmax','Gsmax','a1','Ds0','Vcmx0','alpha','Tau_Leaf','Tau_Wood','Tau_Root','Tau_F','Tau_C',
             'Tau_Micro','Tau_SlowSOM','Tau_Passive','TminV','TmaxV','ToptV','Tcold','Gamma_Wmax','Gamma_Tmax']
-    carboncol=['nsc','Q_leaf','Q_wood','Q_root1','Q_root2','Q_root3','Q_coarse','Q_fine','Q_micr','Q_slow','Q_pass']
+    carboncol=['nsc','Q_leaf','Q_wood','Q_root1','Q_root2','Q_root3','Q_coarse','Q_fine','Q_micr','Q_slow','Q_pass','S_w_min','Q10_h']
     #addInitfile = ['TminV','TmaxV','ToptV','Tcold','Gamma_Wmax','Gamma_Tmax']
     #workaround ="-6.3833\n47.934\n32.963\n10.733\n0.00015\n0.00161\n"#0.51041\n"
     wkdir =basedir + "celery_data/" + task_id
