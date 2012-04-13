@@ -209,7 +209,7 @@ def custom_tecov2_setup(task_id,site,filename,years,forecast):
 
 def set_input_data(db,site,fields,wd,outfile,start,end,forc):
     #Set result set from mongo
-    halfprecip=0.0
+    halfPrecip=0.0
     result = db.forcing.find({"Site":site,"observed_date":{"$gte": start, "$lt": end}}).sort([('observed_date',1)])
     for row in result:
         if row['hour'] == math.ceil(row['hour']):
