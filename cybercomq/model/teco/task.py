@@ -203,11 +203,18 @@ def custom_tecov2_setup(task_id,site,filename,years,forecast):
     yr=ast.literal_eval(years)
     start = datetime(yr[0],1,1)
     end = datetime(yr[1] + 1,1,1)
+    #figure time step currrently only working for Hourly and half hourly
+    stepRes=db.forcing.find({"Site":site}).sort([('observed_date',1),('hour',1)]).limit(2)
+    step=stepRes[1]['hour']-stepRes[0]['hour']
+    if step == 0.5:
+        stepdenom=2
+    else:
+        stepdenom=1
     #safe eval forecast to list of tuples
     forc = ast.literal_eval(forecast)
-    set_input_data(db,site,head,wd,outfile,start,end,forc)
+    set_input_data(db,site,head,wd,outfile,start,end,forc,stepdenom)
 
-def set_input_data(db,site,fields,wd,outfile,start,end,forc):
+def set_input_data(db,site,fields,wd,outfile,start,end,forc,divby):
     #Set result set from mongo
     halfPrecip=0.0
     result = db.forcing.find({"Site":site,"observed_date":{"$gte": start, "$lt": end}}).sort([('observed_date',1)])
@@ -216,11 +223,11 @@ def set_input_data(db,site,fields,wd,outfile,start,end,forc):
             rw=''
             for col in fields:
                 if col == 'Precip':
-                    rw = rw +  str(row[col] + halfPrecip ).rjust(int(wd[fields.index(col)]),' ')
+                    rw = rw +  str((row[col] + halfPrecip)/divby ).rjust(int(wd[fields.index(col)]),' ')
                 else:
                     rw = rw +  str(row[col]).rjust(int(wd[fields.index(col)]),' ')
             outfile.write(rw + '\n')
-            halfprecip=0.0
+            halfPrecip=0.0
         else:
             halfPrecip=row['Precip']
     #forecast added to add to forcing file
@@ -234,30 +241,30 @@ def set_input_data(db,site,fields,wd,outfile,start,end,forc):
             opt=2
         else:
             opt=3
-        halfprecip=0.0
+        halfPrecip=0.0
         result= db.forcing.find({'Site':site,'Year':forc_yr[1]}).sort([('observed_date',1)])
         for row in result:
             if row['hour']== math.ceil(row['hour']):
                 if opt==1:
-                    fw_file(outfile,fields,wd,forc_yr[0],row['DOY'],row,halfPrecip)
+                    fw_file(outfile,fields,wd,forc_yr[0],row['DOY'],row,halfPrecip,divby)
                 elif opt==2:
                     if row['DOY']>= 60:
                         if row['DOY'] == 60 and row['hour'] == 0.0:
                             result228 = db.forcing.find({'Year':forc_yr[1],'DOY':59}).sort([('observed_date',1)])
                             for row28 in result228:
-                                fw_file(outfile,fields,wd,forc_yr[0],60,row28,halfPrecip)
-                        fw_file(outfile,fields,wd,forc_yr[0],row['DOY']+1,row,halfPrecip)
+                                fw_file(outfile,fields,wd,forc_yr[0],60,row28,halfPrecip,divby)
+                        fw_file(outfile,fields,wd,forc_yr[0],row['DOY']+1,row,halfPrecip,divby)
                     else:
-                        fw_file(outfile,fields,wd,forc_yr[0],row['DOY'],row,halfPrecip)
+                        fw_file(outfile,fields,wd,forc_yr[0],row['DOY'],row,halfPrecip,divby)
                 else:
                     if row['DOY']>= 60:
                         if row['DOY'] == 60:
                             pass
                         else:
-                            fw_file(outfile,fields,wd,forc_yr[0],row['DOY']-1,row,halfPrecip)
+                            fw_file(outfile,fields,wd,forc_yr[0],row['DOY']-1,row,halfPrecip,divby)
                     else:
-                        fw_file(outfile,fields,wd,forc_yr[0],row['DOY'],row,halfPrecip)
-                halfprecip=0.0
+                        fw_file(outfile,fields,wd,forc_yr[0],row['DOY'],row,halfPrecip,divby)
+                halfPrecip=0.0
             else:
                 halfPrecip=row['Precip']
             #lastrow=row
@@ -268,7 +275,7 @@ def set_input_data(db,site,fields,wd,outfile,start,end,forc):
             #    else:
             #        rw = rw +  str(row[col]).rjust(int(wd[fields.index(col)]),' ')
             #outfile.write(rw + '\n')
-def fw_file(outfile,fields,wd,Year,DOY,row,halfPrecip):
+def fw_file(outfile,fields,wd,Year,DOY,row,halfPrecip,divby):
     rw=''
     for col in fields:
         if col =='Year':
@@ -276,7 +283,7 @@ def fw_file(outfile,fields,wd,Year,DOY,row,halfPrecip):
         elif col == 'DOY':
             rw = rw +  str(DOY).rjust(int(wd[fields.index(col)]),' ')
         elif col == 'Precip':
-            rw = rw +  str(row[col] + halfPrecip).rjust(int(wd[fields.index(col)]),' ')
+            rw = rw +  str((row[col] + halfPrecip)/divby).rjust(int(wd[fields.index(col)]),' ')
         else:
             rw = rw +  str(row[col]).rjust(int(wd[fields.index(col)]),' ')
     outfile.write(rw + '\n')
