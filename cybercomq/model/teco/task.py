@@ -121,7 +121,7 @@ def runTeco(task_id=None,**kwargs):#runDir):
        # call(['scp', wkdir +"/US-HA1_TECO_04.txt", "mstacy@static.cybercommons.org:" + webloc])
         call(['scp','-r', wkdir , "mstacy@static.cybercommons.org:" + webloc])
         #load to mongo
-        dld = dataloader.Mongo_load('teco',host='fire.rccc.ou.edu' )
+        dld = dataloader.Mongo_load('teco',host = mongoHost )
         collection='taskresults'
         adddict ={'task_id': task_id}
         dld.file2mongo(wkdir + "/Results.txt",collection,file_type='fixed_width',addDict=adddict,specificOperation=set_observed_date)
