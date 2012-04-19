@@ -6,7 +6,7 @@ from cybercom.data.catalog import datalayer,dataloader
 from subprocess import call,STDOUT
 import os,commands,json,ast
 import math
-mongoHost = ['129.15.41.76','fire.rccc.ou.edu']
+mongoHost = '129.15.41.76'
 if os.uname()[1] == 'ip-129-15-40-58.rccc.ou.edu':
     basedir = '/Users/mstacy/Desktop/TECO_HarvardForest/'
 elif os.uname()[1] == 'dhcp-162-41.rccc.ou.edu':
