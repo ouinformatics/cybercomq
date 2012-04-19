@@ -6,7 +6,7 @@ BROKER_VHOST = "cybercom_test"
 
 CELERY_RESULT_BACKEND = "mongodb"
 CELERY_MONGODB_BACKEND_SETTINGS = {
-    "host": "fire.rccc.ou.edu",
+    "host": "129.15.41.76",
     "database": "cybercom_queue",
     "taskmeta_collection": "cybercom_queue_meta"
 }
