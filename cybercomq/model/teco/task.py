@@ -6,6 +6,7 @@ from cybercom.data.catalog import datalayer,dataloader
 from subprocess import call,STDOUT
 import os,commands,json,ast
 import math
+mongoHost = ['129.15.41.76','fire.rccc.ou.edu']
 if os.uname()[1] == 'ip-129-15-40-58.rccc.ou.edu':
     basedir = '/Users/mstacy/Desktop/TECO_HarvardForest/'
 elif os.uname()[1] == 'dhcp-162-41.rccc.ou.edu':
@@ -43,6 +44,10 @@ def initTECOrun(**kwargs):
         else:
             #Use default siteparam for site
             param = json.loads(urlopen("http://test.cybercommons.org/mongo/db_find/teco/siteparam/{'spec':{'site':'" + site + "'}}/").read())[0]
+        if 'mod_weather' in kwargs:
+            modWeather = ast.literal_eval(kwargs['mod_weather'])
+        else:
+            modWeather={}
         newDir = basedir + "celery_data/" + str(initTECOrun.request.id)
         call(["mkdir",newDir])
         os.chdir(newDir)
@@ -53,7 +58,7 @@ def initTECOrun(**kwargs):
         #Set link to inital options file - Legacy TECO Model required
         #call(["ln","-s",basedir + "initial_opt.txt",newDir + "/initial_opt.txt"])
         #Create forcing file according to input parameters
-        custom_tecov2_setup(initTECOrun.request.id,site,param['inputfile'],base_yrs, forecast)
+        custom_tecov2_setup(initTECOrun.request.id,site,param['inputfile'],base_yrs, forecast,modWeather)
         #Set Link to file - Legacy TECO Model - Not used in fortran code but required
         if site == 'US-HA1':
             call(["ln","-s",basedir + "HarvardForest_hr_Chuixiang.txt",newDir + "/" + param['NEEfile']])
@@ -62,7 +67,7 @@ def initTECOrun(**kwargs):
         raise
 @task(serializer="json")
 def getLocations(**kwargs):
-    db = Connection('fire.rccc.ou.edu')
+    db = Connection(mongoHost)
     #check if site in siteparams
     siteparam = db['teco']['siteparam'].distinct('site')
     #check if site in forcing data
@@ -156,7 +161,7 @@ def set_site_param(task_id,param):
     carboncol=['nsc','Q_leaf','Q_wood','Q_root1','Q_root2','Q_root3','Q_coarse','Q_fine','Q_micr','Q_slow','Q_pass','S_w_min','Q10_h']
     #addInitfile = ['TminV','TmaxV','ToptV','Tcold','Gamma_Wmax','Gamma_Tmax']
     #workaround ="-6.3833\n47.934\n32.963\n10.733\n0.00015\n0.00161\n"#0.51041\n"
-    wkdir =basedir + "celery_data/" + task_id
+    wkdir =basedir + "celery_data/" + str(task_id)
     os.chdir(wkdir)
     header =''
     value=''
@@ -183,7 +188,7 @@ def set_site_param(task_id,param):
     f2.write(initvalue)
     #f2.write(workaround)
     f2.close()
-def custom_tecov2_setup(task_id,site,filename,years,forecast):
+def custom_tecov2_setup(task_id,site,filename,years,forecast,modWeather):
     # Header row
     header='Year  DOY  hour  T_air q1   Q_air  q2   Wind_speed q3     Precip   q4   Pressure   q5  R_global_in q6   R_longwave_in q7   CO2'
     head =['Year','DOY','hour','T_air','q1','Q_air','q2','Wind_speed','q3','Precip','q4','Pressure','q5',
@@ -191,14 +196,14 @@ def custom_tecov2_setup(task_id,site,filename,years,forecast):
     #fixed width list of values
     wd=[4,5,7,14,2,14,2,14,2,14,2,14,2,14,2,14,2,11]
     #set working diectory
-    wkdir = basedir + "celery_data/" + task_id
+    wkdir = basedir + "celery_data/" + str(task_id)
     #wkdir = "/home/mstacy/test"
     os.chdir(wkdir)
     #open file and set header
     outfile = open(filename,"w")
     outfile.write(header + '\n\n')
     #open mongo connection
-    db = Connection('fire.rccc.ou.edu').teco
+    db = Connection(mongoHost).teco
     #safe eval to get start and end dates
     yr=ast.literal_eval(years)
     start = datetime(yr[0],1,1)
@@ -212,9 +217,9 @@ def custom_tecov2_setup(task_id,site,filename,years,forecast):
         stepdenom=1
     #safe eval forecast to list of tuples
     forc = ast.literal_eval(forecast)
-    set_input_data(db,site,head,wd,outfile,start,end,forc,stepdenom)
+    set_input_data(db,site,head,wd,outfile,start,end,forc,stepdenom,modWeather)
 
-def set_input_data(db,site,fields,wd,outfile,start,end,forc,divby):
+def set_input_data(db,site,fields,wd,outfile,start,end,forc,divby,modWeather):
     #Set result set from mongo
     halfPrecip=0.0
     result = db.forcing.find({"Site":site,"observed_date":{"$gte": start, "$lt": end}}).sort([('observed_date',1)])
@@ -223,9 +228,9 @@ def set_input_data(db,site,fields,wd,outfile,start,end,forc,divby):
             rw=''
             for col in fields:
                 if col == 'Precip':
-                    rw = rw +  str((row[col] + halfPrecip)/divby ).rjust(int(wd[fields.index(col)]),' ')
+                    rw = rw +  str(modify_weather(((row[col] + halfPrecip)/divby),col,modWeather)).rjust(int(wd[fields.index(col)]),' ')
                 else:
-                    rw = rw +  str(row[col]).rjust(int(wd[fields.index(col)]),' ')
+                    rw = rw +  str(modify_weather(row[col],col,modWeather)).rjust(int(wd[fields.index(col)]),' ')
             outfile.write(rw + '\n')
             halfPrecip=0.0
         else:
@@ -246,24 +251,24 @@ def set_input_data(db,site,fields,wd,outfile,start,end,forc,divby):
         for row in result:
             if row['hour']== math.ceil(row['hour']):
                 if opt==1:
-                    fw_file(outfile,fields,wd,forc_yr[0],row['DOY'],row,halfPrecip,divby)
+                    fw_file(outfile,fields,wd,forc_yr[0],row['DOY'],row,halfPrecip,divby,modWeather)
                 elif opt==2:
                     if row['DOY']>= 60:
                         if row['DOY'] == 60 and row['hour'] == 0.0:
                             result228 = db.forcing.find({'Year':forc_yr[1],'DOY':59}).sort([('observed_date',1)])
                             for row28 in result228:
-                                fw_file(outfile,fields,wd,forc_yr[0],60,row28,halfPrecip,divby)
-                        fw_file(outfile,fields,wd,forc_yr[0],row['DOY']+1,row,halfPrecip,divby)
+                                fw_file(outfile,fields,wd,forc_yr[0],60,row28,halfPrecip,divby,modWeather)
+                        fw_file(outfile,fields,wd,forc_yr[0],row['DOY']+1,row,halfPrecip,divby,modWeather)
                     else:
-                        fw_file(outfile,fields,wd,forc_yr[0],row['DOY'],row,halfPrecip,divby)
+                        fw_file(outfile,fields,wd,forc_yr[0],row['DOY'],row,halfPrecip,divby,modWeather)
                 else:
                     if row['DOY']>= 60:
                         if row['DOY'] == 60:
                             pass
                         else:
-                            fw_file(outfile,fields,wd,forc_yr[0],row['DOY']-1,row,halfPrecip,divby)
+                            fw_file(outfile,fields,wd,forc_yr[0],row['DOY']-1,row,halfPrecip,divby,modWeather)
                     else:
-                        fw_file(outfile,fields,wd,forc_yr[0],row['DOY'],row,halfPrecip,divby)
+                        fw_file(outfile,fields,wd,forc_yr[0],row['DOY'],row,halfPrecip,divby,modWeather)
                 halfPrecip=0.0
             else:
                 halfPrecip=row['Precip']
@@ -275,18 +280,37 @@ def set_input_data(db,site,fields,wd,outfile,start,end,forc,divby):
             #    else:
             #        rw = rw +  str(row[col]).rjust(int(wd[fields.index(col)]),' ')
             #outfile.write(rw + '\n')
-def fw_file(outfile,fields,wd,Year,DOY,row,halfPrecip,divby):
+def fw_file(outfile,fields,wd,Year,DOY,row,halfPrecip,divby,modWeather):
     rw=''
     for col in fields:
         if col =='Year':
             rw = rw +  str(Year).rjust(int(wd[fields.index(col)]),' ')
         elif col == 'DOY':
             rw = rw +  str(DOY).rjust(int(wd[fields.index(col)]),' ')
-        elif col == 'Precip':
-            rw = rw +  str((row[col] + halfPrecip)/divby).rjust(int(wd[fields.index(col)]),' ')
-        else:
+        elif col =='hour':
             rw = rw +  str(row[col]).rjust(int(wd[fields.index(col)]),' ')
+        elif col == 'Precip':
+            rw = rw +  str(modify_weather((row[col] + halfPrecip)/divby ,col ,modWeather)).rjust(int(wd[fields.index(col)]),' ')
+        else:
+            rw = rw +  str(modify_weather(row[col],col,modWeather)).rjust(int(wd[fields.index(col)]),' ')
     outfile.write(rw + '\n')
+def modify_weather(value,col,modWeather):
+    modvalue = value
+    if col in modWeather:
+        modify=modWeather[col]
+        for mods in modify:
+            if mods[0]=='+' or mods[0]=='add':
+                modvalue = modvalue + mods[1]
+            elif mods[0]=='*' or mods[0]=='x' or mods[0]=='multiply':
+                modvalue = modvalue * mods[1]
+            elif mods[0]=='-' or mods[0]=='subtract':
+                modvalue = modvalue - mods[1]
+            elif mods[0]=='divide' or mods[0]=='/':
+                try:
+                    modvalue = modvalue / mods[1]
+                except:
+                    pass
+    return modvalue
 
 def isLeap(year):
     if (year % 4)==0:
