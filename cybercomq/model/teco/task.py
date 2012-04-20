@@ -73,7 +73,7 @@ def initTECOrun(callback=None,**kwargs):
         if site == 'US-HA1':
             call(["ln","-s",basedir + "HarvardForest_hr_Chuixiang.txt",newDir + "/" + param['NEEfile']])
         if callback:
-            return subtask(callback).delay(task_id=str(initTECOrun.request.id))
+            return subtask(callback).delay(task_id=str(initTECOrun.request.id)).task_id
         else:
             return newDir
     except:
