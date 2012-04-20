@@ -27,7 +27,7 @@ def add(x, y,callback=None):
 def runTECOworkflow(site=None,base_yrs=None,forecast=None,siteparam=None,mod_weather=None,**kwargs):
     return initTECOrun.delay(site,base_yrs,forecast,siteparam,mod_weather,callback=subtask(runTeco))
 @task()
-def initTECOrun(site=None,base_yrs=None,forecast=None,siteparam=None,mod_weather=None,callback=None,**kwargs):
+def initTECOrun(callback=None,**kwargs):
     ''' Create working directory
         Create data files
         Link executable to file
