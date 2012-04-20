@@ -28,7 +28,7 @@ def runTECOworkflow(site=None,base_yrs=None,forecast=None,siteparam=None,mod_wea
     if siteparam:
         return initTECOrun.delay(site=site,base_yrs=base_yrs,forecast=forecast,siteparam=siteparam,mod_weather=mod_weather,callback=subtask(runTeco))
     else:
-        return initTECOrun.delay(site=site,base_yrs=base_yrs,forecast=forecast,mod_weather=mod_weather,callback=subtask(runTeco))
+        return initTECOrun.delay(site=site,base_yrs=base_yrs,forecast=forecast,mod_weather=mod_weather,callback=subtask(runTeco)).task_id
 @task()
 def initTECOrun(callback=None,**kwargs):
     ''' Create working directory
