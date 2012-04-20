@@ -25,7 +25,7 @@ def add(x, y,callback=None):
     return result
 @task()
 def runTECOworkflow(site=None,base_yrs=None,forecast=None,siteparam=None,mod_weather=None,**kwargs):
-    return initTECOrun.delay(site,base_yrs,forecast,siteparam,mod_weather,callback=subtask(runTeco))
+    return initTECOrun.delay(site=site,base_yrs=base_yrs,forecast=forecast,siteparam=siteparam,mod_weather=mod_weather,callback=subtask(runTeco))
 @task()
 def initTECOrun(callback=None,**kwargs):
     ''' Create working directory
