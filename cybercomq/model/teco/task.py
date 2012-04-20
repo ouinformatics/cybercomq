@@ -1,4 +1,5 @@
 from celery.task import task
+from celery.task.sets import subtask
 from pymongo import Connection
 from datetime import datetime,timedelta
 from urllib2 import urlopen
@@ -16,11 +17,17 @@ elif os.uname()[1] == 'earth.rccc.ou.edu':
 #elif os.uname()[1] == 'static.cybercommons.org':
 #    basedir =raise "Current server( %s ) doesn't have directory for TECO Model setup!" % os.uname()[1]
 
-@task(serializer="json")
-def add(x, y):
-    return x + y
 @task()
-def initTECOrun(**kwargs):
+def add(x, y,callback=None):
+    result = x + y
+    if callback is not None:
+        subtask(callback).delay(result)
+    return result
+@task()
+def runTECOworkflow(site=None,base_yrs=None,forecast=None,siteparam=None,mod_weather=None,**kwargs):
+    return initTECOrun.delay(site,base_yrs,forecast,siteparam,mod_weather,callback=subtask(runTeco))
+@task()
+def initTECOrun(site=None,base_yrs=None,forecast=None,siteparam=None,mod_weather=None,callback=None,**kwargs):
     ''' Create working directory
         Create data files
         Link executable to file
@@ -62,10 +69,13 @@ def initTECOrun(**kwargs):
         #Set Link to file - Legacy TECO Model - Not used in fortran code but required
         if site == 'US-HA1':
             call(["ln","-s",basedir + "HarvardForest_hr_Chuixiang.txt",newDir + "/" + param['NEEfile']])
-        return newDir
+        if callback:
+            return subtask(callback).delay(task_id=str(initTECOrun.request.id))
+        else:
+            return newDir
     except:
         raise
-@task(serializer="json")
+@task()#serializer="json")
 def getLocations(**kwargs):
     db = Connection(mongoHost)
     #check if site in siteparams
