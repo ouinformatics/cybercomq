@@ -26,9 +26,11 @@ def add(x, y,callback=None):
 @task()
 def runTECOworkflow(site=None,base_yrs=None,forecast=None,siteparam=None,mod_weather=None,**kwargs):
     if siteparam:
-        return initTECOrun.delay(site=site,base_yrs=base_yrs,forecast=forecast,siteparam=siteparam,mod_weather=mod_weather,callback=subtask(runTeco))
+        result=initTECOrun.delay(site=site,base_yrs=base_yrs,forecast=forecast,siteparam=siteparam,mod_weather=mod_weather,callback=subtask(runTeco))
+        return {'task_id':result.task_id,'task_name':result.task_name}
     else:
-        return initTECOrun.delay(site=site,base_yrs=base_yrs,forecast=forecast,mod_weather=mod_weather,callback=subtask(runTeco)).task_id
+        result=initTECOrun.delay(site=site,base_yrs=base_yrs,forecast=forecast,mod_weather=mod_weather,callback=subtask(runTeco))
+        return {'task_id':result.task_id,'task_name':result.task_name}
 @task()
 def initTECOrun(callback=None,**kwargs):
     ''' Create working directory
@@ -73,7 +75,8 @@ def initTECOrun(callback=None,**kwargs):
         if site == 'US-HA1':
             call(["ln","-s",basedir + "HarvardForest_hr_Chuixiang.txt",newDir + "/" + param['NEEfile']])
         if callback:
-            return subtask(callback).delay(task_id=str(initTECOrun.request.id)).task_id
+            result=subtask(callback).delay(task_id=str(initTECOrun.request.id))
+            return {'task_id':result.task_id,'task_name':result.task_name}
         else:
             return newDir
     except:
