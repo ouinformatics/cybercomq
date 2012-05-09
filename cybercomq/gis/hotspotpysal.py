@@ -21,7 +21,7 @@ import pymongo
 def funcname():
     return inspect.stack()[1][3]
 
-con = pymongo.Connection('fire.rccc.ou.edu')
+con = pymongo.Connection('129.15.41.76')
 
 ### Functions to help get radar data from archive ###
 import logging, os, subprocess, tempfile, shutil
