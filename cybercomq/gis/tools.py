@@ -2,7 +2,7 @@ import geojson
 import json, tempfile, shutil, sys, os
 import pandas
 from subprocess import call
-from urllib import urlopen
+from urllib2 import urlopen
 from zipfile import ZipFile
 from StringIO import StringIO
 
@@ -41,7 +41,7 @@ def GeoJSON2shp(inputurl):
         outfile.seek()
     except:
         logging.error('''Problem zipping output''')
-        logging.error(sys.exec_info())
+        logging.error(sys.exc_info())
     logging.info('Cleaning up...')
     shutil.rmtree(tempdir)
     return outfile
@@ -51,19 +51,19 @@ def GeoJSONProperties2CSV(inputurl):
     """ Takes the properties/attributes of a GeoJSON document and returns a CSV representation of the data"""
     try:
         res = urlopen(inputurl)
-    except:
+    except HTTPError:
         logging.error('Had a problem accessing URL: %s' % inputurl)
-        logging.error(sys.exec_info())
+        logging.error(sys.exc_info())
     try:
         jsonout = json.loads(res.read())
-    except:
+    except ValueError:
         logging.error('Had a problem converting json to python, is it well formed?')
-        logging.error(sys.exec_info())
+        logging.error(sys.exc_info())
     try:
         df = pandas.DataFrame([ item['properties'] for item in jsonout ])
-    except:
-        logging.error('Had a problem converting to pandas DataFrame')
-        logging.error(sys.exec_info())
+    except PandasError, e:
+        logging.error('%s' % e )
+        logging.error(sys.exc_info())
     try:
         outfile = StringIO()
         df.to_csv(outfile)
@@ -72,8 +72,13 @@ def GeoJSONProperties2CSV(inputurl):
         return outdata
     except:
         logging.error('Had trouble converting to CSV')
-        logging.error(sys.exec_info())
+        logging.error(sys.exc_info())
         return None
+
+
+
+
+
     
         
 
