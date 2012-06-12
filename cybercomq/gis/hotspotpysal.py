@@ -110,6 +110,7 @@ def gdal2points(filename, datatrans=None):
     return line
 
 def applyResults(Zvect, ij_in, mask, outshape):
+    ''' Apply results from masked array across original input array '''
     Zgrid = numpy.zeros(outshape)
     ij = ma.masked_array(ij_in, mask).compressed()
     for idx, grid in enumerate(ij):
@@ -118,19 +119,23 @@ def applyResults(Zvect, ij_in, mask, outshape):
     return Zgrid
 
 def GetisOrd(y,locations, distance=5):
+    ''' Run GetisOrd* for given data and locations'''
     w = pysal.weights.user.threshold_binaryW_from_array(locations,distance)
     return G_Local(y, w, star=True, permutations=None)
 
 def stageData(timestep, location):
+    ''' Bring down unqc_cref data '''
     tdir = tempfile.mkdtemp()
     filename = getScene(timestep, location, tdir, radius=0.5)
     return filename 
 
 def cleanup(filename):
+    ''' Clean files left over from processing '''
     shutil.rmtree(os.path.dirname(filename))
 
 @task
 def hotspots(timestep, location, distance=5, zFilter_lt=1, minpixels=5, task_id=None):
+    ''' Run a hotspot analysis at a given timestep and location '''
     logging.info('Startting...')
     start=time.time()
     filename = stageData(timestep,location)
@@ -189,6 +194,7 @@ def date_range(start_datetime, end_datetime):
 
 @task
 def hotspotsRange(start_time, stop_time, location, **kwargs):
+    ''' Run ofver a range of timesteps at 5 minute intervals in between '''
     start = datetime.strptime(start_time, '%Y%m%d.%H%M%S')
     stop = datetime.strptime(stop_time, '%Y%m%d.%H%M%S')
     kwargs.update({'task_id': hotspotsRange.request.id})
