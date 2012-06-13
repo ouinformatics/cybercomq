@@ -34,7 +34,7 @@ def runTECOworkflow(site=None,base_yrs=None,forecast=None,siteparam=None,mod_wea
             return {'task_id':result.task_id,'task_name':result.task_name}
     elif model == 'DDA':
         dda=1
-        if not dda_hour_freq:
+        if not dda_freq:
             raise "Please specify parameter 'dda_hour_freq', Frequency to pass to kalmen filter(1 for every hour, 8 for every eighth hour)"
         if siteparam:
             result=initTECOrun.delay(site=site,base_yrs=base_yrs,forecast=forecast,siteparam=siteparam,mod_weather=mod_weather,model=model,dda_freq=dda_freq,callback=subtask(runTeco))
@@ -157,7 +157,7 @@ def runTeco(task_id=None,model=None, dda_freq=1 ,**kwargs):#runDir):
         if model == None or model == 'TECO_f1':
             call(["./runTeco", wkdir + "/sitepara_tcs.txt", wkdir + "/Results.txt"],stdout=logfile,stderr=STDOUT)
         else:
-            call(["./runTeco", wkdir + "/sitepara_tcs.txt", wkdir + "/Results.txt",1, int(dda_freq)],stdout=logfile,stderr=STDOUT)
+            call(["./runTeco", wkdir + "/sitepara_tcs.txt", wkdir + "/Results.txt","1", str(dda_freq)],stdout=logfile,stderr=STDOUT)
         call(['rm',wkdir + '/runTeco'])
         #call(['rm',wkdir + '/HarvardForest_hr_Chuixiang.txt'])
         #call(['./runTeco',wkdir + "/sitepara_tcs.txt",wkdr + "/US-HA1_TECO_04.txt"])
