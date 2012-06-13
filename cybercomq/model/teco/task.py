@@ -24,13 +24,27 @@ def add(x, y,callback=None):
         subtask(callback).delay(result)
     return result
 @task()
-def runTECOworkflow(site=None,base_yrs=None,forecast=None,siteparam=None,mod_weather=None,**kwargs):
-    if siteparam:
-        result=initTECOrun.delay(site=site,base_yrs=base_yrs,forecast=forecast,siteparam=siteparam,mod_weather=mod_weather,callback=subtask(runTeco))
-        return {'task_id':result.task_id,'task_name':result.task_name}
+def runTECOworkflow(site=None,base_yrs=None,forecast=None,siteparam=None,mod_weather=None,model='TECO_f1',dda_freq=1 , **kwargs):
+    if model == 'TECO_f1':
+        if siteparam:
+            result=initTECOrun.delay(site=site,base_yrs=base_yrs,forecast=forecast,siteparam=siteparam,mod_weather=mod_weather,callback=subtask(runTeco))
+            return {'task_id':result.task_id,'task_name':result.task_name}
+        else:
+            result=initTECOrun.delay(site=site,base_yrs=base_yrs,forecast=forecast,mod_weather=mod_weather,callback=subtask(runTeco))
+            return {'task_id':result.task_id,'task_name':result.task_name}
+    elif model == 'DDA':
+        dda=1
+        if not dda_hour_freq:
+            raise "Please specify parameter 'dda_hour_freq', Frequency to pass to kalmen filter(1 for every hour, 8 for every eighth hour)"
+        if siteparam:
+            result=initTECOrun.delay(site=site,base_yrs=base_yrs,forecast=forecast,siteparam=siteparam,mod_weather=mod_weather,model=model,dda_freq=dda_freq,callback=subtask(runTeco))
+            return {'task_id':result.task_id,'task_name':result.task_name}
+        else:
+            result=initTECOrun.delay(site=site,base_yrs=base_yrs,forecast=forecast,mod_weather=mod_weather,model=model,dda_freq=dda_freq,callback=subtask(runTeco))
+            return {'task_id':result.task_id,'task_name':result.task_name}
+        
     else:
-        result=initTECOrun.delay(site=site,base_yrs=base_yrs,forecast=forecast,mod_weather=mod_weather,callback=subtask(runTeco))
-        return {'task_id':result.task_id,'task_name':result.task_name}
+        raise "Model parameter must be either TECO_f1 or DDA"
 @task()
 def initTECOrun(callback=None,**kwargs):
     ''' Create working directory
@@ -60,11 +74,24 @@ def initTECOrun(callback=None,**kwargs):
             modWeather = ast.literal_eval(kwargs['mod_weather'])
         else:
             modWeather={}
+        if 'model' in kwargs:
+            model=kwargs['model']
+            if 'dda_freq' in kwargs:
+                dda_freq=kwargs['dda_freq']
+            else:
+                dda_freq=1
+        else:
+            model='TECO_f1'
+            dda_freq=None
         newDir = basedir + "celery_data/" + str(initTECOrun.request.id)
         call(["mkdir",newDir])
         os.chdir(newDir)
         #create link to teco executable
-        call(["ln","-s",basedir + "runTeco",newDir + "/runTeco"])
+        if model=='TECO_f1':
+            call(["ln","-s",basedir + "runTeco",newDir + "/runTeco"])
+        else:
+            call(["ln","-s",basedir + "prod_ver/runTeco_dda",newDir + "/runTeco"])
+        #/scratch/cybercom/model/teco/prod_ver/runTeco_dda sitepara_tcs.txt Results.txt 1 1
         #Set paramater file - Legacy TECO Model
         set_site_param(initTECOrun.request.id,param)
         #Set link to inital options file - Legacy TECO Model required
@@ -75,7 +102,7 @@ def initTECOrun(callback=None,**kwargs):
         if site == 'US-HA1':
             call(["ln","-s",basedir + "HarvardForest_hr_Chuixiang.txt",newDir + "/" + param['NEEfile']])
         if callback:
-            result=subtask(callback).delay(task_id=str(initTECOrun.request.id))
+            result=subtask(callback).delay(task_id=str(initTECOrun.request.id),model=model,dda_freq=dda_freq)
             return {'task_id':result.task_id,'task_name':result.task_name}
         else:
             return newDir
@@ -116,7 +143,7 @@ def getLocations(**kwargs):
 #    except:
 #        raise
 @task()
-def runTeco(task_id=None,**kwargs):#runDir):
+def runTeco(task_id=None,model=None, dda_freq=1 ,**kwargs):#runDir):
     ''' run teco model 
         param = {url to files files required to run model}
     '''
@@ -127,7 +154,10 @@ def runTeco(task_id=None,**kwargs):#runDir):
         wkdir =basedir + "celery_data/" + task_id
         os.chdir(wkdir)
         logfile= open(wkdir + "/logfile.txt","w")
-        call(["./runTeco", wkdir + "/sitepara_tcs.txt", wkdir + "/Results.txt"],stdout=logfile,stderr=STDOUT)
+        if model == None or model == 'TECO_f1':
+            call(["./runTeco", wkdir + "/sitepara_tcs.txt", wkdir + "/Results.txt"],stdout=logfile,stderr=STDOUT)
+        else:
+            call(["./runTeco", wkdir + "/sitepara_tcs.txt", wkdir + "/Results.txt",1, int(dda_freq)],stdout=logfile,stderr=STDOUT)
         call(['rm',wkdir + '/runTeco'])
         #call(['rm',wkdir + '/HarvardForest_hr_Chuixiang.txt'])
         #call(['./runTeco',wkdir + "/sitepara_tcs.txt",wkdr + "/US-HA1_TECO_04.txt"])
