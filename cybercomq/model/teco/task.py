@@ -71,7 +71,10 @@ def initTECOrun(callback=None,**kwargs):
             #Use default siteparam for site
             param = json.loads(urlopen("http://test.cybercommons.org/mongo/db_find/teco/siteparam/{'spec':{'site':'" + site + "'}}/").read())[0]
         if 'mod_weather' in kwargs:
-            modWeather = ast.literal_eval(kwargs['mod_weather'])
+            try:
+                modWeather = ast.literal_eval(kwargs['mod_weather'])
+            except:
+                modWeather={}
         else:
             modWeather={}
         if 'model' in kwargs:
