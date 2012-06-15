@@ -103,7 +103,11 @@ def initTECOrun(callback=None,**kwargs):
         custom_tecov2_setup(initTECOrun.request.id,site,param['inputfile'],base_yrs, forecast,modWeather)
         #Set Link to file - Legacy TECO Model - Not used in fortran code but required
         if site == 'US-HA1':
-            call(["ln","-s",basedir + "HarvardForest_hr_Chuixiang.txt",newDir + "/" + param['NEEfile']])
+            if model=='TECO_f1':
+                call(["ln","-s",basedir + "HarvardForest_hr_Chuixiang.txt",newDir + "/" + param['NEEfile']])
+            else:
+                if base_yrs == "(1991,2006)":
+                    call(["ln","-s",basedir + "HarvardForest_hr_Chuixiang.txt",newDir + "/" + param['NEEfile']])
         if callback:
             result=subtask(callback).delay(task_id=str(initTECOrun.request.id),model=model,dda_freq=dda_freq)
             return {'task_id':result.task_id,'task_name':result.task_name}
