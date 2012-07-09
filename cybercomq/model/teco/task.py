@@ -10,7 +10,7 @@ import math
 mongoHost = '129.15.41.76'
 if os.uname()[1] == 'ip-129-15-40-58.rccc.ou.edu':
     basedir = '/Users/mstacy/Desktop/TECO_HarvardForest/'
-elif os.uname()[1] == 'dhcp-162-41.rccc.ou.edu':
+elif os.uname()[1] == 'Marks-MacBook-Pro.local':
     basedir = '/Users/mstacy/Desktop/TECO_HarvardForest/'
 elif os.uname()[1] == 'earth.rccc.ou.edu':
     basedir = '/scratch/cybercom/model/teco/'
@@ -103,11 +103,12 @@ def initTECOrun(callback=None,**kwargs):
         custom_tecov2_setup(initTECOrun.request.id,site,param['inputfile'],base_yrs, forecast,modWeather)
         #Set Link to file - Legacy TECO Model - Not used in fortran code but required
         if site == 'US-HA1':
-            if model=='TECO_f1':
-                call(["ln","-s",basedir + "HarvardForest_hr_Chuixiang.txt",newDir + "/" + param['NEEfile']])
-            else:
-                if base_yrs == "(1991,2006)":
-                    call(["ln","-s",basedir + "HarvardForest_hr_Chuixiang.txt",newDir + "/" + param['NEEfile']])
+            custom_tecov2_nee(initTECOrun.request.id,site,param['NEEfile'],base_yrs, forecast)
+            #if model=='TECO_f1':
+            #    call(["ln","-s",basedir + "HarvardForest_hr_Chuixiang.txt",newDir + "/" + param['NEEfile']])
+            #else:
+            #    if base_yrs == "(1991,2006)":
+            #        call(["ln","-s",basedir + "HarvardForest_hr_Chuixiang.txt",newDir + "/" + param['NEEfile']])
         if callback:
             result=subtask(callback).delay(task_id=str(initTECOrun.request.id),model=model,dda_freq=dda_freq)
             return {'task_id':result.task_id,'task_name':result.task_name}
@@ -271,6 +272,92 @@ def custom_tecov2_setup(task_id,site,filename,years,forecast,modWeather):
     #safe eval forecast to list of tuples
     forc = ast.literal_eval(forecast)
     set_input_data(db,site,head,wd,outfile,start,end,forc,stepdenom,modWeather)
+def custom_tecov2_nee(task_id,site,filename,years,forecast):#,modWeather):
+    # Header row
+    header='Year DOY hour     T_air q1    precip q2       PAR q3     R_net q4    ustar         NEE filled_NEE         LE  filled_LE\n'
+    head =['Year','DOY','hour','T_air','q1','precip','q2','PAR','q3','R_net','q4','ustar','NEE','filled_NEE','LE','filled_LE']
+    #fixed width list of values
+    wd=[4,4,5,11,2,11,2,11,2,11,2,11,11,11,11,11]
+    #set working diectory
+    wkdir = basedir + "celery_data/" + str(task_id)
+    #wkdir = "/home/mstacy/test"
+    os.chdir(wkdir)
+    #open file and set header
+    outfile = open(filename,"w")
+    outfile.write(header)
+    #open mongo connection
+    db = Connection(mongoHost).teco
+    #safe eval to get start and end dates
+    yr=ast.literal_eval(years)
+    start = yr[0]
+    end = yr[1] 
+    #figure time step currrently only working for Hourly and half hourly
+    #stepRes=db.forcing.find({"Site":site}).sort([('observed_date',1),('hour',1)]).limit(2)
+    #step=stepRes[1]['hour']-stepRes[0]['hour']
+    #if step == 0.5:
+    #    stepdenom=2
+    #else:
+    #stepdenom=1
+    #safe eval forecast to list of tuples
+    forc = ast.literal_eval(forecast)
+    set_nee_data(db,site,head,wd,outfile,start,end,forc)#,stepdenom,modWeather)
+def set_nee_data(db,site,fields,wd,outfile,startyr,endyr,forc,divby=1,modWeather={}):
+    result = db.observed_nee.find({"Site":site,"Year":{"$gte": startyr, "$lte": endyr}}).sort([('Year',1),('DOY',1),('hour',1)])
+    for row in result:
+        if row['hour'] == math.ceil(row['hour']):
+            rw=''
+            for col in fields:
+                if col =='Year' or col == 'DOY':
+                    rw = rw +  str(modify_weather(int(row[col]),col,modWeather)).rjust(int(wd[fields.index(col)]),' ')
+                else:
+                    rw = rw +  str(modify_weather(row[col],col,modWeather)).rjust(int(wd[fields.index(col)]),' ')
+                #if col == 'Precip':
+                #    rw = rw +  str(modify_weather(((row[col] + halfPrecip)/divby),col,modWeather)).rjust(int(wd[fields.index(col)]),' ')
+                #else:
+                #rw = rw +  str(modify_weather(row[col],col,modWeather)).rjust(int(wd[fields.index(col)]),' ')
+            outfile.write(rw + '\n')
+            #halfPrecip=0.0
+        else:
+            print "wrong way"
+            #halfPrecip=row['Precip']
+    #forecast added to add to forcing file
+    for forc_yr in forc:
+        f0=isLeap(forc_yr[0])
+        f1=isLeap(forc_yr[1])
+        opt=0
+        if f0==f1:
+            opt=1
+        elif f0:
+            opt=2
+        else:
+            opt=3
+        #halfPrecip=0.0
+        result= db.observed_nee.find({'Site':site,'Year':forc_yr[1]}).sort([('DOY',1),('hour',1)])
+        for row in result:
+            if row['hour']== math.ceil(row['hour']):
+                if opt==1:
+                    fw_file(outfile,fields,wd,forc_yr[0],int(row['DOY']),row,0.0,divby,modWeather)
+                elif opt==2:
+                    if row['DOY']>= 60:
+                        if row['DOY'] == 60 and row['hour'] == 0.0:
+                            result228 = db.observed_nee.find({'Site':site,'Year':forc_yr[1],'DOY':59}).sort([('hour',1)])
+                            for row28 in result228:
+                                fw_file(outfile,fields,wd,forc_yr[0],60,row28,0.0,divby,modWeather)
+                        fw_file(outfile,fields,wd,forc_yr[0],int(row['DOY'])+1,row,0.0,divby,modWeather)
+                    else:
+                        fw_file(outfile,fields,wd,forc_yr[0],int(row['DOY']),row,0.0,divby,modWeather)
+                else:
+                    if row['DOY']>= 60:
+                        if row['DOY'] == 60:
+                            pass
+                        else:
+                            fw_file(outfile,fields,wd,forc_yr[0],int(row['DOY'])-1,row,0.0,divby,modWeather)
+                    else:
+                        fw_file(outfile,fields,wd,forc_yr[0],int(row['DOY']),row,0.0,divby,modWeather)
+                #halfPrecip=0.0
+            else:
+                print "forcasting wrong way"
+                #halfPrecip=row['Precip'] 
 
 def set_input_data(db,site,fields,wd,outfile,start,end,forc,divby,modWeather):
     #Set result set from mongo
