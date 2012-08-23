@@ -4,7 +4,19 @@ from cybercom.data.catalog import datalayer as dl
 from datetime import datetime
 import socket
 import os
+import pymongo
+from cybercom.data.catalog import dataloader as ddl
+import ConfigParser
 
+#Retrieve Data Catalog Login 
+cfgfile = os.path.join(os.path.expanduser('/opt/celeryq'), '.cybercom')
+config= ConfigParser.RawConfigParser()
+config.read(cfgfile)
+MONGO_CATALOG_HOST= config.get('catalog','host')
+MONGO_CATALOG_PORT = config.get('catalog','port')
+MONGO_DATA_HOST = config.get('database','host')
+DATA_COMMONS='TECO_uploads'
+DATA_COLLECTION='data'
 #BROKER_URL = "amqplib://jduckles:cybercommons@fire.rccc.ou.edu/cybercom_test"
 
 @task()
@@ -39,4 +51,18 @@ This link will expire in 48 hours"""  % (download)
 def modistile(product, country, start_date, end_date, outpath=None, notify=None):
     """ Prepare zipfile of a single MODIS tile for download """
     pass
-
+@task()
+def teco_upload(user_id,filename,cybercomq.static.tasks.file_type='fixed_width',addDict=None,specificOperation=None,seperator=',',skiplines=0,skiplinesAfterHeader=0):
+    try:
+        addDt = {'user':user_id}
+        if addDict:
+            addDict.update(addDt)
+        else:
+            addDict = addDt
+        collection = 'uploaded_data'
+        filename= '/static/cache/test/teco_fileupload/' + filename
+        dataload = ddl.Mongo_load(DATA_COMMONS,host=MONGO_CATALOG_HOST,port=MONGO_CATALOG_PORT)
+        dataload.file2mongo(filename,collection,file_type,addDict,specificOperation,seperator,skiplines,skiplinesAfterHeader)
+        return {'status':True}
+    except Exception as inst:
+        return {'status':True,'description':str(inst)}
