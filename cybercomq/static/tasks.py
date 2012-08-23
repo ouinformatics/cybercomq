@@ -52,7 +52,7 @@ def modistile(product, country, start_date, end_date, outpath=None, notify=None)
     """ Prepare zipfile of a single MODIS tile for download """
     pass
 @task()
-def teco_upload(user_id,filename,cybercomq.static.tasks.file_type='fixed_width',addDict=None,specificOperation=None,seperator=',',skiplines=0,skiplinesAfterHeader=0):
+def teco_upload(user_id,filename,file_type='fixed_width',addDict=None,specificOperation=None,seperator=',',skiplines=0,skiplinesAfterHeader=0):
     try:
         addDt = {'user':user_id}
         if addDict:
@@ -61,8 +61,8 @@ def teco_upload(user_id,filename,cybercomq.static.tasks.file_type='fixed_width',
             addDict = addDt
         collection = 'uploaded_data'
         filename= '/static/cache/test/teco_fileupload/' + filename
-        dataload = ddl.Mongo_load(DATA_COMMONS,host=MONGO_CATALOG_HOST,port=MONGO_CATALOG_PORT)
+        dataload = ddl.Mongo_load('teco',host=MONGO_DATA_HOST)
         dataload.file2mongo(filename,collection,file_type,addDict,specificOperation,seperator,skiplines,skiplinesAfterHeader)
         return {'status':True}
     except Exception as inst:
-        return {'status':True,'description':str(inst)}
+        return {'status':False,'description':str(inst)}
