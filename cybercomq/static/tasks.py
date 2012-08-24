@@ -1,4 +1,4 @@
-lfrom celery.task import task
+from celery.task import task
 import filezip as fz
 from cybercom.data.catalog import datalayer as dl
 from datetime import datetime
