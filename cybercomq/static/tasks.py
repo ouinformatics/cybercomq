@@ -1,4 +1,4 @@
-from celery.task import task
+lfrom celery.task import task
 import filezip as fz
 from cybercom.data.catalog import datalayer as dl
 from datetime import datetime
@@ -54,13 +54,19 @@ def modistile(product, country, start_date, end_date, outpath=None, notify=None)
 @task()
 def teco_upload(user_id,filename,file_type='fixed_width',addDict=None,specificOperation=None,seperator=',',skiplines=0,skiplinesAfterHeader=0):
     try:
-        addDt = {'user':user_id}
+        addDt = {'user':user_id,'location':filename}
         if addDict:
             addDict.update(addDt)
         else:
             addDict = addDt
+        f1 = open(
         collection = 'uploaded_data'
         filename= '/static/cache/test/teco_fileupload/' + filename
+        f1 = open(filename,'r')
+        header = f1.readline()
+        f1.close()
+        if not "q1" in header:
+            addDict.update({'q1':1,'q2':1,'q3':1,'q4':1,'q5':1,'q6':1,'q7':1})
         dataload = ddl.Mongo_load('teco',host=MONGO_DATA_HOST)
         dataload.file2mongo(filename,collection,file_type,addDict,specificOperation,seperator,skiplines,skiplinesAfterHeader)
         return {'status':True}
