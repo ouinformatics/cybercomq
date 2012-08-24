@@ -59,7 +59,6 @@ def teco_upload(user_id,filename,file_type='fixed_width',addDict=None,specificOp
             addDict.update(addDt)
         else:
             addDict = addDt
-        f1 = open(
         collection = 'uploaded_data'
         filename= '/static/cache/test/teco_fileupload/' + filename
         f1 = open(filename,'r')
