@@ -73,7 +73,7 @@ def teco_upload(user_id,filename,file_type='fixed_width',addDict=None,specificOp
         dataload.file2mongo(filename,collection,file_type,addDict,specificOperation,seperator,skiplines,skiplinesAfterHeader)
         #catalog based on user
         db = pymongo.Connection(MONGO_CATALOG_HOST + ":" + str(MONGO_CATALOG_PORT))
-        data = db['cybercom_upload']['data'].findOne({'user':userid})
+        data = db['cybercom_upload']['data'].findOne({'user':user_id})
         info ={'taskname':taskname,'file':filename}
         if data:
             data['task'].append(info)
@@ -85,7 +85,7 @@ def teco_upload(user_id,filename,file_type='fixed_width',addDict=None,specificOp
     except Exception as inst:
         try:
             db = pymongo.Connection(MONGO_CATALOG_HOST + ":" + str(MONGO_CATALOG_PORT))
-            data = db['cybercom_upload']['data'].findOne({'user':userid})
+            data = db['cybercom_upload']['data'].findOne({'user':user_id})
             info ={'taskname':taskname,'file':filename,'error':str(inst)}
             if data:
                 data['task'].append(info)
