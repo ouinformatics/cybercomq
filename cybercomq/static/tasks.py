@@ -6,6 +6,7 @@ import socket
 import os
 import pymongo
 from cybercom.data.catalog import dataloader as ddl
+from cybercom.data.catalog import datacommons
 import ConfigParser
 
 #Retrieve Data Catalog Login 
@@ -54,6 +55,8 @@ def modistile(product, country, start_date, end_date, outpath=None, notify=None)
 @task()
 def teco_upload(user_id,filename,file_type='fixed_width',addDict=None,specificOperation=None,seperator=',',skiplines=0,skiplinesAfterHeader=0):
     try:
+        taskname='cybercomq.static.tasks.teco_upload'
+        #load into Mongo
         addDt = {'user':user_id,'location':filename}
         if addDict:
             addDict.update(addDt)
@@ -68,6 +71,27 @@ def teco_upload(user_id,filename,file_type='fixed_width',addDict=None,specificOp
             addDict.update({'q1':1,'q2':1,'q3':1,'q4':1,'q5':1,'q6':1,'q7':1})
         dataload = ddl.Mongo_load('teco',host=MONGO_DATA_HOST)
         dataload.file2mongo(filename,collection,file_type,addDict,specificOperation,seperator,skiplines,skiplinesAfterHeader)
+        #catalog based on user
+        db = pymongo.Connection(MONGO_CATALOG_HOST)
+        data = db['cybercom_upload']['data'].findOne({'user':userid})
+        info ={'taskname':taskname,'file':filename}
+        if data:
+            data['task'].append(info)
+        else:
+            data = {'user':userid,'task':[info]}
+        db['cybercom_upload']['data'].save(data)
+        #return Status
         return {'status':True}
     except Exception as inst:
-        return {'status':False,'description':str(inst)}
+        try:
+            db = pymongo.Connection(MONGO_CATALOG_HOST)
+            data = db['cybercom_upload']['data'].findOne({'user':userid})
+            info ={'taskname':taskname,'file':filename,'error':str(inst)}
+            if data:
+                data['task'].append(info)
+            else:
+                data = {'user':userid,'task':[info]}
+            db['cybercom_upload']['data'].save(data)
+            return {'status':False,'description':str(inst)}
+        except Exception as inst1:
+            return {'status':False,'description':"(" + str(inst) + ") and (" + str(inst1) + ")"}
