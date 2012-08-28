@@ -78,19 +78,19 @@ def teco_upload(user_id,filename,file_type='fixed_width',addDict=None,specificOp
         if data:
             data['task'].append(info)
         else:
-            data = {'user':userid,'task':[info]}
+            data = {'user':user_id,'task':[info]}
         db['cybercom_upload']['data'].save(data)
         #return Status
         return {'status':True}
     except Exception as inst:
         try:
-            db = pymongo.Connection(MONGO_CATALOG_HOST)
+            db = pymongo.Connection(MONGO_CATALOG_HOST + ":" + str(MONGO_CATALOG_PORT))
             data = db['cybercom_upload']['data'].findOne({'user':userid})
             info ={'taskname':taskname,'file':filename,'error':str(inst)}
             if data:
                 data['task'].append(info)
             else:
-                data = {'user':userid,'task':[info]}
+                data = {'user':user_id,'task':[info]}
             db['cybercom_upload']['data'].save(data)
             return {'status':False,'description':str(inst)}
         except Exception as inst1:
