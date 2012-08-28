@@ -55,9 +55,19 @@ def modistile(product, country, start_date, end_date, outpath=None, notify=None)
 @task()
 def teco_upload(user_id,filename,file_type='fixed_width',addDict=None,specificOperation=None,seperator=',',skiplines=0,skiplinesAfterHeader=0):
     try:
+        file_name = filename
+        db = pymongo.Connection(MONGO_CATALOG_HOST + ":" + str(MONGO_CATALOG_PORT))
+        data = db['cybercom_upload']['data'].find_one({'user':user_id})
         taskname='cybercomq.static.tasks.teco_upload'
+        info ={'taskname':taskname,'file':file_name}
+        #check if file already exists
+        if data:
+            for item in data['task']:
+                if item['file']==file_name and item['taskname']==taskname:
+                    return {'status':False,'description':'File name has already been used. Please change the name of file to upload.'} 
+
         #load into Mongo
-        addDt = {'user':user_id,'location':filename}
+        addDt = {'user':user_id,'location':file_name}
         if addDict:
             addDict.update(addDt)
         else:
@@ -72,9 +82,9 @@ def teco_upload(user_id,filename,file_type='fixed_width',addDict=None,specificOp
         dataload = ddl.Mongo_load('teco',host=MONGO_DATA_HOST)
         dataload.file2mongo(filename,collection,file_type,addDict,specificOperation,seperator,skiplines,skiplinesAfterHeader)
         #catalog based on user
-        db = pymongo.Connection(MONGO_CATALOG_HOST + ":" + str(MONGO_CATALOG_PORT))
-        data = db['cybercom_upload']['data'].find_one({'user':user_id})
-        info ={'taskname':taskname,'file':filename}
+        #db = pymongo.Connection(MONGO_CATALOG_HOST + ":" + str(MONGO_CATALOG_PORT))
+        #data = db['cybercom_upload']['data'].find_one({'user':user_id})
+        #info ={'taskname':taskname,'file':filename}
         if data:
             data['task'].append(info)
         else:
@@ -84,9 +94,9 @@ def teco_upload(user_id,filename,file_type='fixed_width',addDict=None,specificOp
         return {'status':True}
     except Exception as inst:
         try:
-            db = pymongo.Connection(MONGO_CATALOG_HOST + ":" + str(MONGO_CATALOG_PORT))
-            data = db['cybercom_upload']['data'].find_one({'user':user_id})
-            info ={'taskname':taskname,'file':filename,'error':str(inst)}
+            #db = pymongo.Connection(MONGO_CATALOG_HOST + ":" + str(MONGO_CATALOG_PORT))
+            #data = db['cybercom_upload']['data'].find_one({'user':user_id})
+            info ={'taskname':taskname,'file':file_name,'error':str(inst)}
             if data:
                 data['task'].append(info)
             else:
