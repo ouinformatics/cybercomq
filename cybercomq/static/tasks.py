@@ -72,7 +72,7 @@ def teco_upload(user_id,filename,file_type='fixed_width',addDict=None,specificOp
         dataload = ddl.Mongo_load('teco',host=MONGO_DATA_HOST)
         dataload.file2mongo(filename,collection,file_type,addDict,specificOperation,seperator,skiplines,skiplinesAfterHeader)
         #catalog based on user
-        db = pymongo.Connection(MONGO_CATALOG_HOST)
+        db = pymongo.Connection(MONGO_CATALOG_HOST + ":" + str(MONGO_CATALOG_PORT))
         data = db['cybercom_upload']['data'].findOne({'user':userid})
         info ={'taskname':taskname,'file':filename}
         if data:
