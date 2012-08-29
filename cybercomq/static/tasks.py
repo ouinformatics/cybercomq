@@ -91,7 +91,7 @@ def teco_upload(user_id,filename,file_type='fixed_width',addDict=None,specificOp
             data = {'user':user_id,'task':[info]}
         db['cybercom_upload']['data'].save(data)
         #return Status
-        return {'status':True}
+        return {'status':True,'description':'File loaded to TECO Data Store, please upload Observed NEE file'}
     except Exception as inst:
         try:
             #db = pymongo.Connection(MONGO_CATALOG_HOST + ":" + str(MONGO_CATALOG_PORT))
