@@ -110,6 +110,7 @@ def teco_upload(user_id,filename,file_type='fixed_width',addDict=None,specificOp
                 for item in data['task']:
                     if item['file']==match:
                         item['match']=True
+                db['cybercom_upload']['data'].save(data)
                 #data['task'].append(info)
             else:
                 return {'status':False,'description':'Forcing file is required prior to uploading Observed NEE file.'}
