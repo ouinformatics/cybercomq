@@ -64,7 +64,7 @@ def teco_upload(user_id,filename,file_type='fixed_width',addDict=None,specificOp
         if data:
             for item in data['task']:
                 if item['file']==file_name and item['taskname']==taskname:
-                    return {'status':False,'description':'File name has already been used. Please change the name of file to upload.'} 
+                    return {'status':False,'description':'Duplicate filename: Filename must be unique, please change the name of file to upload.'} 
 
         #load into Mongo
         addDt = {'user':user_id,'location':file_name}
