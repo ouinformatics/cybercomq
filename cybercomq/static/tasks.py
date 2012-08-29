@@ -99,7 +99,7 @@ def teco_upload(user_id,filename,file_type='fixed_width',addDict=None,specificOp
         #data = db['cybercom_upload']['data'].find_one({'user':user_id})
         #info ={'taskname':taskname,'file':filename}
         if match:
-            pass
+            return {'status':True,'description':'File loaded to TECO Data Store, please upload Observed NEE file'}
         else:
             if data:
                 data['task'].append(info)
