@@ -55,10 +55,11 @@ def modistile(product, country, start_date, end_date, outpath=None, notify=None)
 @task()
 def teco_upload(user_id,filename,file_type='fixed_width',addDict=None,specificOperation=None,seperator=',',skiplines=0,skiplinesAfterHeader=0,match=None):
     try:
+        file_name = filename
         if match:
             pass
         else:
-            file_name = filename
+            #file_name = filename
             db = pymongo.Connection(MONGO_CATALOG_HOST + ":" + str(MONGO_CATALOG_PORT))
             data = db['cybercom_upload']['data'].find_one({'user':user_id})
             taskname='cybercomq.static.tasks.teco_upload'
