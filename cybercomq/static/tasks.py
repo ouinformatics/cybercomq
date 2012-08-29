@@ -78,7 +78,10 @@ def teco_upload(user_id,filename,file_type='fixed_width',addDict=None,specificOp
                         return {'status':False,'description':'Duplicate filename: Filename must be unique, please change the name of file to upload.'} 
 
         #load into Mongo
-        addDt = {'user':user_id,'location':file_name}
+        if match:
+            addDt = {'user':user_id,'location':match}
+        else:
+            addDt = {'user':user_id,'location':file_name}
         if addDict:
             addDict.update(addDt)
         else:
@@ -114,7 +117,7 @@ def teco_upload(user_id,filename,file_type='fixed_width',addDict=None,specificOp
                 #data['task'].append(info)
             else:
                 return {'status':False,'description':'Forcing file is required prior to uploading Observed NEE file.'}
-            return {'status':True,'description':'Observed NEE loaded to TECO Data Store.Ready to use in TECO simulations.'}
+            return {'status':True,'description':'Observed NEE loaded to TECO Data Store. Ready to use in TECO simulations.'}
         else:
             if data:
                 data['task'].append(info)
