@@ -53,18 +53,21 @@ def modistile(product, country, start_date, end_date, outpath=None, notify=None)
     """ Prepare zipfile of a single MODIS tile for download """
     pass
 @task()
-def teco_upload(user_id,filename,file_type='fixed_width',addDict=None,specificOperation=None,seperator=',',skiplines=0,skiplinesAfterHeader=0):
+def teco_upload(user_id,filename,file_type='fixed_width',addDict=None,specificOperation=None,seperator=',',skiplines=0,skiplinesAfterHeader=0,match=None):
     try:
-        file_name = filename
-        db = pymongo.Connection(MONGO_CATALOG_HOST + ":" + str(MONGO_CATALOG_PORT))
-        data = db['cybercom_upload']['data'].find_one({'user':user_id})
-        taskname='cybercomq.static.tasks.teco_upload'
-        info ={'taskname':taskname,'file':file_name}
-        #check if file already exists
-        if data:
-            for item in data['task']:
-                if item['file']==file_name and item['taskname']==taskname:
-                    return {'status':False,'description':'Duplicate filename: Filename must be unique, please change the name of file to upload.'} 
+        if match:
+            pass
+        else:
+            file_name = filename
+            db = pymongo.Connection(MONGO_CATALOG_HOST + ":" + str(MONGO_CATALOG_PORT))
+            data = db['cybercom_upload']['data'].find_one({'user':user_id})
+            taskname='cybercomq.static.tasks.teco_upload'
+            info ={'taskname':taskname,'file':file_name}
+            #check if file already exists
+            if data:
+                for item in data['task']:
+                    if item['file']==file_name and item['taskname']==taskname:
+                        return {'status':False,'description':'Duplicate filename: Filename must be unique, please change the name of file to upload.'} 
 
         #load into Mongo
         addDt = {'user':user_id,'location':file_name}
@@ -72,36 +75,48 @@ def teco_upload(user_id,filename,file_type='fixed_width',addDict=None,specificOp
             addDict.update(addDt)
         else:
             addDict = addDt
-        collection = 'uploaded_data'
+        #*******set collection***********************************
+        if match:
+            collection = 'uploaded_nee_data'
+        else:
+            collection = 'uploaded_data'
+        #8*******************************************************
         filename= '/static/cache/test/teco_fileupload/' + filename
         f1 = open(filename,'r')
         header = f1.readline()
         f1.close()
+        #check header
         if not "q1" in header:
-            addDict.update({'q1':1,'q2':1,'q3':1,'q4':1,'q5':1,'q6':1,'q7':1})
+            if match:
+                addDict.update({'q1':1,'q2':1,'q3':1,'q4':1})
+            else:
+                addDict.update({'q1':1,'q2':1,'q3':1,'q4':1,'q5':1,'q6':1,'q7':1})
         dataload = ddl.Mongo_load('teco',host=MONGO_DATA_HOST)
         dataload.file2mongo(filename,collection,file_type,addDict,specificOperation,seperator,skiplines,skiplinesAfterHeader)
         #catalog based on user
         #db = pymongo.Connection(MONGO_CATALOG_HOST + ":" + str(MONGO_CATALOG_PORT))
         #data = db['cybercom_upload']['data'].find_one({'user':user_id})
         #info ={'taskname':taskname,'file':filename}
-        if data:
-            data['task'].append(info)
+        if match:
+            pass
         else:
-            data = {'user':user_id,'task':[info]}
-        db['cybercom_upload']['data'].save(data)
-        #return Status
-        return {'status':True,'description':'File loaded to TECO Data Store, please upload Observed NEE file'}
-    except Exception as inst:
-        try:
-            #db = pymongo.Connection(MONGO_CATALOG_HOST + ":" + str(MONGO_CATALOG_PORT))
-            #data = db['cybercom_upload']['data'].find_one({'user':user_id})
-            info ={'taskname':taskname,'file':file_name,'error':str(inst)}
             if data:
                 data['task'].append(info)
             else:
                 data = {'user':user_id,'task':[info]}
             db['cybercom_upload']['data'].save(data)
-            return {'status':False,'description':str(inst)}
-        except Exception as inst1:
-            return {'status':False,'description':"(" + str(inst) + ") and (" + str(inst1) + ")"}
+            #return Status
+            return {'status':True,'description':'File loaded to TECO Data Store, please upload Observed NEE file'}
+    except Exception as inst:
+        #try:
+            #db = pymongo.Connection(MONGO_CATALOG_HOST + ":" + str(MONGO_CATALOG_PORT))
+            #data = db['cybercom_upload']['data'].find_one({'user':user_id})
+        #    info ={'taskname':taskname,'file':file_name,'error':str(inst)}
+        #    if data:
+        #        data['task'].append(info)
+        #    else:
+        #        data = {'user':user_id,'task':[info]}
+        #    db['cybercom_upload']['data'].save(data)
+        #    return {'status':False,'description':str(inst)}
+        #except Exception as inst1:
+        return {'status':False,'description':"(" + str(inst) + ")" }
