@@ -56,13 +56,20 @@ def modistile(product, country, start_date, end_date, outpath=None, notify=None)
 def teco_upload(user_id,filename,file_type='fixed_width',addDict=None,specificOperation=None,seperator=',',skiplines=0,skiplinesAfterHeader=0,match=None):
     try:
         file_name = filename
+        db = pymongo.Connection(MONGO_CATALOG_HOST + ":" + str(MONGO_CATALOG_PORT))
+        data = db['cybercom_upload']['data'].find_one({'user':user_id})
+        taskname='cybercomq.static.tasks.teco_upload'
+        
         if match:
-            pass
+            if not data:
+                return {'status':False,'description':'Forcing file is required prior to uploading Observed NEE file.'}
+            info ={'taskname':taskname,'file':file_name}
+            #pass
         else:
             #file_name = filename
-            db = pymongo.Connection(MONGO_CATALOG_HOST + ":" + str(MONGO_CATALOG_PORT))
-            data = db['cybercom_upload']['data'].find_one({'user':user_id})
-            taskname='cybercomq.static.tasks.teco_upload'
+            #db = pymongo.Connection(MONGO_CATALOG_HOST + ":" + str(MONGO_CATALOG_PORT))
+            #data = db['cybercom_upload']['data'].find_one({'user':user_id})
+            #taskname='cybercomq.static.tasks.teco_upload'
             info ={'taskname':taskname,'file':file_name}
             #check if file already exists
             if data:
@@ -99,7 +106,14 @@ def teco_upload(user_id,filename,file_type='fixed_width',addDict=None,specificOp
         #data = db['cybercom_upload']['data'].find_one({'user':user_id})
         #info ={'taskname':taskname,'file':filename}
         if match:
-            return {'status':True,'description':'File loaded to TECO Data Store, please upload Observed NEE file'}
+            if data:
+                for item in data['task']:
+                    if item['file']==match:
+                        item['match']=True
+                #data['task'].append(info)
+            else:
+                return {'status':False,'description':'Forcing file is required prior to uploading Observed NEE file.'}
+            return {'status':True,'description':'Observed NEE loaded to TECO Data Store.Ready to use in TECO simulations.'}
         else:
             if data:
                 data['task'].append(info)
