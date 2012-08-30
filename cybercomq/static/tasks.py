@@ -59,17 +59,12 @@ def teco_upload(user_id,filename,file_type='fixed_width',addDict=None,specificOp
         db = pymongo.Connection(MONGO_CATALOG_HOST + ":" + str(MONGO_CATALOG_PORT))
         data = db['cybercom_upload']['data'].find_one({'user':user_id})
         taskname='cybercomq.static.tasks.teco_upload'
-        
+        #Check and setup catalog data
         if match:
+            info ={'taskname':taskname,'file':file_name}
             if not data:
                 return {'status':False,'description':'Forcing file is required prior to uploading Observed NEE file.'}
-            info ={'taskname':taskname,'file':file_name}
-            #pass
         else:
-            #file_name = filename
-            #db = pymongo.Connection(MONGO_CATALOG_HOST + ":" + str(MONGO_CATALOG_PORT))
-            #data = db['cybercom_upload']['data'].find_one({'user':user_id})
-            #taskname='cybercomq.static.tasks.teco_upload'
             info ={'taskname':taskname,'file':file_name}
             #check if file already exists
             if data:
@@ -79,9 +74,9 @@ def teco_upload(user_id,filename,file_type='fixed_width',addDict=None,specificOp
 
         #load into Mongo
         if match:
-            addDt = {'user':user_id,'location':match}
+            addDt = {'user':user_id,'Site':match,'location':match}
         else:
-            addDt = {'user':user_id,'location':file_name}
+            addDt = {'user':user_id,'Site':file_name,'location':file_name}
         if addDict:
             addDict.update(addDt)
         else:
@@ -103,18 +98,15 @@ def teco_upload(user_id,filename,file_type='fixed_width',addDict=None,specificOp
             else:
                 addDict.update({'q1':1,'q2':1,'q3':1,'q4':1,'q5':1,'q6':1,'q7':1})
         dataload = ddl.Mongo_load('teco',host=MONGO_DATA_HOST)
-        dataload.file2mongo(filename,collection,file_type,addDict,specificOperation,seperator,skiplines,skiplinesAfterHeader)
+        dataload.file2mongo(filename,collection,file_type,addDict,calc_obs_date,seperator,skiplines,skiplinesAfterHeader)
+
         #catalog based on user
-        #db = pymongo.Connection(MONGO_CATALOG_HOST + ":" + str(MONGO_CATALOG_PORT))
-        #data = db['cybercom_upload']['data'].find_one({'user':user_id})
-        #info ={'taskname':taskname,'file':filename}
         if match:
             if data:
                 for item in data['task']:
                     if item['file']==match:
                         item['match']=True
                 db['cybercom_upload']['data'].save(data)
-                #data['task'].append(info)
             else:
                 return {'status':False,'description':'Forcing file is required prior to uploading Observed NEE file.'}
             return {'status':True,'description':'Observed NEE loaded to TECO Data Store. Ready to use in TECO simulations.'}
@@ -139,3 +131,13 @@ def teco_upload(user_id,filename,file_type='fixed_width',addDict=None,specificOp
         #    return {'status':False,'description':str(inst)}
         #except Exception as inst1:
         return {'status':False,'description':"(" + str(inst) + ")" }
+def calc_obs_date(row):
+    try:
+        doy = row["DOY"]
+        hour = row["hour"]
+        year = row ["Year"]
+        dt=datetime(year, 1, 1,hour) + timedelta(doy - 1)
+        row['observed_date']=dt
+        return row
+    except:
+        raise
