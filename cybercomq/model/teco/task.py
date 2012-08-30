@@ -24,23 +24,23 @@ def add(x, y,callback=None):
         subtask(callback).delay(result)
     return result
 @task()
-def runTECOworkflow(site=None,base_yrs=None,forecast=None,siteparam=None,mod_weather=None,model='TECO_f1',dda_freq=1 , **kwargs):
+def runTECOworkflow(site=None,base_yrs=None,forecast=None,siteparam=None,mod_weather=None,model='TECO_f1',dda_freq=1 ,upload=None, **kwargs):
     if model == 'TECO_f1':
         if siteparam:
-            result=initTECOrun.delay(site=site,base_yrs=base_yrs,forecast=forecast,siteparam=siteparam,mod_weather=mod_weather,callback=subtask(runTeco))
+            result=initTECOrun.delay(site=site,base_yrs=base_yrs,forecast=forecast,siteparam=siteparam,mod_weather=mod_weather,upload=upload,callback=subtask(runTeco))
             return {'task_id':result.task_id,'task_name':result.task_name}
         else:
-            result=initTECOrun.delay(site=site,base_yrs=base_yrs,forecast=forecast,mod_weather=mod_weather,callback=subtask(runTeco))
+            result=initTECOrun.delay(site=site,base_yrs=base_yrs,forecast=forecast,mod_weather=mod_weather,upload=upload,callback=subtask(runTeco))
             return {'task_id':result.task_id,'task_name':result.task_name}
     elif model == 'DDA':
         dda=1
         if not dda_freq:
             raise "Please specify parameter 'dda_hour_freq', Frequency to pass to kalmen filter(1 for every hour, 8 for every eighth hour)"
         if siteparam:
-            result=initTECOrun.delay(site=site,base_yrs=base_yrs,forecast=forecast,siteparam=siteparam,mod_weather=mod_weather,model=model,dda_freq=dda_freq,callback=subtask(runTeco))
+            result=initTECOrun.delay(site=site,base_yrs=base_yrs,forecast=forecast,siteparam=siteparam,mod_weather=mod_weather,model=model,dda_freq=dda_freq,upload=upload,callback=subtask(runTeco))
             return {'task_id':result.task_id,'task_name':result.task_name}
         else:
-            result=initTECOrun.delay(site=site,base_yrs=base_yrs,forecast=forecast,mod_weather=mod_weather,model=model,dda_freq=dda_freq,callback=subtask(runTeco))
+            result=initTECOrun.delay(site=site,base_yrs=base_yrs,forecast=forecast,mod_weather=mod_weather,model=model,dda_freq=dda_freq,upload=upload,callback=subtask(runTeco))
             return {'task_id':result.task_id,'task_name':result.task_name}
         
     else:
@@ -53,6 +53,10 @@ def initTECOrun(callback=None,**kwargs):
         return working directory
     '''
     try:
+        if 'upload' in kwargs:
+            upload = kwargs['upload']
+        else:
+            upload=None
         if 'site' in kwargs: 
             site = kwargs['site']
         else:
@@ -94,21 +98,18 @@ def initTECOrun(callback=None,**kwargs):
             call(["ln","-s",basedir + "runTeco",newDir + "/runTeco"])
         else:
             call(["ln","-s",basedir + "prod_ver/runTeco_dda",newDir + "/runTeco"])
-        #/scratch/cybercom/model/teco/prod_ver/runTeco_dda sitepara_tcs.txt Results.txt 1 1
-        #Set paramater file - Legacy TECO Model
+
+        #Set paramater file
         set_site_param(initTECOrun.request.id,param)
-        #Set link to inital options file - Legacy TECO Model required
-        #call(["ln","-s",basedir + "initial_opt.txt",newDir + "/initial_opt.txt"])
-        #Create forcing file according to input parameters
-        custom_tecov2_setup(initTECOrun.request.id,site,param['inputfile'],base_yrs, forecast,modWeather)
-        #Set Link to file - Legacy TECO Model - Not used in fortran code but required
-        if site == 'US-HA1':
-            custom_tecov2_nee(initTECOrun.request.id,site,param['NEEfile'],base_yrs, forecast)
-            #if model=='TECO_f1':
-            #    call(["ln","-s",basedir + "HarvardForest_hr_Chuixiang.txt",newDir + "/" + param['NEEfile']])
-            #else:
-            #    if base_yrs == "(1991,2006)":
-            #        call(["ln","-s",basedir + "HarvardForest_hr_Chuixiang.txt",newDir + "/" + param['NEEfile']])
+        custom_tecov2_setup(initTECOrun.request.id,site,param['inputfile'],base_yrs, forecast,modWeather,upload)
+
+        #Set NEE data for model DDA and Legacy TECO Model
+        if upload:
+            custom_tecov2_nee(initTECOrun.request.id,site,param['NEEfile'],base_yrs, forecast,upload)
+        else:
+            if site == 'US-HA1':
+                custom_tecov2_nee(initTECOrun.request.id,site,param['NEEfile'],base_yrs, forecast)
+
         if callback:
             result=subtask(callback).delay(task_id=str(initTECOrun.request.id),model=model,dda_freq=dda_freq)
             return {'task_id':result.task_id,'task_name':result.task_name}
@@ -116,6 +117,7 @@ def initTECOrun(callback=None,**kwargs):
             return newDir
     except:
         raise
+
 @task()#serializer="json")
 def getLocations(**kwargs):
     db = Connection(mongoHost)
@@ -133,23 +135,7 @@ def getLocations(**kwargs):
         for rr in  db['catalog']['location'].find({'loc_id':row}):
             findloc.append(row)
     return findloc
-#@task(serializer="json")
-#def getTecoinput(**kwargs):
-#    '''Currently setup up for demo specific input files'''
-#    try:
-#        md=datalayer.Metadata()
-#        sWhere = "var_id = 'URL' and event_id in (select event_id from dt_event where cat_id = %d or cat_id = %d) " % (1446799,1446801) 
-#        res = md.Search('dt_result',where=sWhere,column=['var_id','result_text'])
-#        for url in res:
-#            temp= url['result_text'].split("/")
-#            fname = temp[len(temp)-1]
-#            filepath = basedir + fname
-#            a = urlopen(url['result_text'])
-#            f1= open(filepath,'w')
-#            f1.write(a.read())
-#        return True 
-#    except:
-#        raise
+
 @task()
 def runTeco(task_id=None,model=None, dda_freq=1 ,**kwargs):#runDir):
     ''' run teco model 
@@ -193,6 +179,16 @@ def runTeco(task_id=None,model=None, dda_freq=1 ,**kwargs):#runDir):
         return temp #http #'TECO Model run Complete'
     except:
         raise
+@task()
+def load_teco_upload(filename,user,db='teco',collection='user_forcing'):
+    dld = dataloader.Mongo_load(db,host = mongoHost)
+    try:
+        name=os.path.splitext(os.path.basename(filename))[0]
+        adddict ={'user':user,'Site':name}
+        dld.file2mongo(filename,collection,file_type='fixed_width',addDict=adddict)#,specificOperation=set_observed_date)
+    except:
+        raise
+
 def set_observed_date(row):
     odate = datetime(int(row['year']),1,1,int(row['hour'])-1,0,0)
     doy = timedelta(days=int(row['doy'])-1)
@@ -242,7 +238,7 @@ def set_site_param(task_id,param):
     f2.write(initvalue)
     #f2.write(workaround)
     f2.close()
-def custom_tecov2_setup(task_id,site,filename,years,forecast,modWeather):
+def custom_tecov2_setup(task_id,site,filename,years,forecast,modWeather,upload):
     # Header row
     header='Year  DOY  hour  T_air q1   Q_air  q2   Wind_speed q3     Precip   q4   Pressure   q5  R_global_in q6   R_longwave_in q7   CO2'
     head =['Year','DOY','hour','T_air','q1','Q_air','q2','Wind_speed','q3','Precip','q4','Pressure','q5',
@@ -263,7 +259,10 @@ def custom_tecov2_setup(task_id,site,filename,years,forecast,modWeather):
     start = datetime(yr[0],1,1)
     end = datetime(yr[1] + 1,1,1)
     #figure time step currrently only working for Hourly and half hourly
-    stepRes=db.forcing.find({"Site":site}).sort([('observed_date',1),('hour',1)]).limit(2)
+    if upload:
+        stepRes=db.uploaded_data.find({"Site":site}).sort([('observed_date',1),('hour',1)]).limit(2)
+    else:
+        stepRes=db.forcing.find({"Site":site}).sort([('observed_date',1),('hour',1)]).limit(2)
     step=stepRes[1]['hour']-stepRes[0]['hour']
     if step == 0.5:
         stepdenom=2
@@ -271,8 +270,8 @@ def custom_tecov2_setup(task_id,site,filename,years,forecast,modWeather):
         stepdenom=1
     #safe eval forecast to list of tuples
     forc = ast.literal_eval(forecast)
-    set_input_data(db,site,head,wd,outfile,start,end,forc,stepdenom,modWeather)
-def custom_tecov2_nee(task_id,site,filename,years,forecast):#,modWeather):
+    set_input_data(db,site,head,wd,outfile,start,end,forc,stepdenom,modWeather,upload)
+def custom_tecov2_nee(task_id,site,filename,years,forecast,upload):#,modWeather):
     # Header row
     header='Year DOY hour     T_air q1    precip q2       PAR q3     R_net q4    ustar         NEE filled_NEE         LE  filled_LE\n'
     head =['Year','DOY','hour','T_air','q1','precip','q2','PAR','q3','R_net','q4','ustar','NEE','filled_NEE','LE','filled_LE']
@@ -300,9 +299,12 @@ def custom_tecov2_nee(task_id,site,filename,years,forecast):#,modWeather):
     #stepdenom=1
     #safe eval forecast to list of tuples
     forc = ast.literal_eval(forecast)
-    set_nee_data(db,site,head,wd,outfile,start,end,forc)#,stepdenom,modWeather)
-def set_nee_data(db,site,fields,wd,outfile,startyr,endyr,forc,divby=1,modWeather={}):
-    result = db.observed_nee.find({"Site":site,"Year":{"$gte": startyr, "$lte": endyr}}).sort([('Year',1),('DOY',1),('hour',1)])
+    set_nee_data(db,site,head,wd,outfile,start,end,forc,upload)#,stepdenom,modWeather)
+def set_nee_data(db,site,fields,wd,outfile,startyr,endyr,forc,upload,divby=1,modWeather={}):
+    if upload:
+        result = db.uploaded_nee_data.find({"Site":site,'user':upload,"Year":{"$gte": startyr, "$lte": endyr}}).sort([('Year',1),('DOY',1),('hour',1)])
+    else:
+        result = db.observed_nee.find({"Site":site,"Year":{"$gte": startyr, "$lte": endyr}}).sort([('Year',1),('DOY',1),('hour',1)])
     for row in result:
         if row['hour'] == math.ceil(row['hour']):
             rw=''
@@ -332,7 +334,10 @@ def set_nee_data(db,site,fields,wd,outfile,startyr,endyr,forc,divby=1,modWeather
         else:
             opt=3
         #halfPrecip=0.0
-        result= db.observed_nee.find({'Site':site,'Year':forc_yr[1]}).sort([('DOY',1),('hour',1)])
+        if upload:
+            result= db.uploaded_nee_data.find({'Site':site,'user':upload,'Year':forc_yr[1]}).sort([('DOY',1),('hour',1)])
+        else:
+            result= db.observed_nee.find({'Site':site,'Year':forc_yr[1]}).sort([('DOY',1),('hour',1)])
         for row in result:
             if row['hour']== math.ceil(row['hour']):
                 if opt==1:
@@ -340,7 +345,10 @@ def set_nee_data(db,site,fields,wd,outfile,startyr,endyr,forc,divby=1,modWeather
                 elif opt==2:
                     if row['DOY']>= 60:
                         if row['DOY'] == 60 and row['hour'] == 0.0:
-                            result228 = db.observed_nee.find({'Site':site,'Year':forc_yr[1],'DOY':59}).sort([('hour',1)])
+                            if upload:
+                                result228 = db.uploaded_nee_data.find({'Site':site,'user':upload,'Year':forc_yr[1],'DOY':59}).sort([('hour',1)])
+                            else:
+                                result228 = db.observed_nee.find({'Site':site,'Year':forc_yr[1],'DOY':59}).sort([('hour',1)])
                             for row28 in result228:
                                 fw_file(outfile,fields,wd,forc_yr[0],60,row28,0.0,divby,modWeather)
                         fw_file(outfile,fields,wd,forc_yr[0],int(row['DOY'])+1,row,0.0,divby,modWeather)
@@ -359,10 +367,13 @@ def set_nee_data(db,site,fields,wd,outfile,startyr,endyr,forc,divby=1,modWeather
                 print "forcasting wrong way"
                 #halfPrecip=row['Precip'] 
 
-def set_input_data(db,site,fields,wd,outfile,start,end,forc,divby,modWeather):
+def set_input_data(db,site,fields,wd,outfile,start,end,forc,divby,modWeather,upload):
     #Set result set from mongo
     halfPrecip=0.0
-    result = db.forcing.find({"Site":site,"observed_date":{"$gte": start, "$lt": end}}).sort([('observed_date',1)])
+    if upload:
+        result = db.uploaded_data.find({"Site":site,'user':upload,"observed_date":{"$gte": start, "$lt": end}}).sort([('observed_date',1)])
+    else:
+        result = db.forcing.find({"Site":site,"observed_date":{"$gte": start, "$lt": end}}).sort([('observed_date',1)])
     for row in result:
         if row['hour'] == math.ceil(row['hour']):
             rw=''
@@ -387,7 +398,10 @@ def set_input_data(db,site,fields,wd,outfile,start,end,forc,divby,modWeather):
         else:
             opt=3
         halfPrecip=0.0
-        result= db.forcing.find({'Site':site,'Year':forc_yr[1]}).sort([('observed_date',1)])
+        if upload:
+            result= db.uploaded_data.find({'Site':site,'user':upload,'Year':forc_yr[1]}).sort([('observed_date',1)])
+        else:
+            result= db.forcing.find({'Site':site,'Year':forc_yr[1]}).sort([('observed_date',1)])
         for row in result:
             if row['hour']== math.ceil(row['hour']):
                 if opt==1:
@@ -395,7 +409,10 @@ def set_input_data(db,site,fields,wd,outfile,start,end,forc,divby,modWeather):
                 elif opt==2:
                     if row['DOY']>= 60:
                         if row['DOY'] == 60 and row['hour'] == 0.0:
-                            result228 = db.forcing.find({'Year':forc_yr[1],'DOY':59}).sort([('observed_date',1)])
+                            if upload:
+                                result228 = db.uploaded_data.find({'Site':site,'user':upload,'Year':forc_yr[1],'DOY':59}).sort([('observed_date',1)])
+                            else:
+                                result228 = db.forcing.find({'Site':site,'Year':forc_yr[1],'DOY':59}).sort([('observed_date',1)])
                             for row28 in result228:
                                 fw_file(outfile,fields,wd,forc_yr[0],60,row28,halfPrecip,divby,modWeather)
                         fw_file(outfile,fields,wd,forc_yr[0],row['DOY']+1,row,halfPrecip,divby,modWeather)
