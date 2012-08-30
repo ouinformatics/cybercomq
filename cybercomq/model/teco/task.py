@@ -108,7 +108,7 @@ def initTECOrun(callback=None,**kwargs):
             custom_tecov2_nee(initTECOrun.request.id,site,param['NEEfile'],base_yrs, forecast,upload)
         else:
             if site == 'US-HA1':
-                custom_tecov2_nee(initTECOrun.request.id,site,param['NEEfile'],base_yrs, forecast)
+                custom_tecov2_nee(initTECOrun.request.id,site,param['NEEfile'],base_yrs, forecast,upload)
 
         if callback:
             result=subtask(callback).delay(task_id=str(initTECOrun.request.id),model=model,dda_freq=dda_freq)
