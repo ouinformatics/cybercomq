@@ -7,7 +7,7 @@ from cybercom.data.catalog import datalayer,dataloader
 from subprocess import call,STDOUT
 import os,commands,json,ast
 import math
-mongoHost = '129.15.41.76'
+mongoHost = 'fire.rccc.ou.edu'
 if os.uname()[1] == 'ip-129-15-40-58.rccc.ou.edu':
     basedir = '/Users/mstacy/Desktop/TECO_HarvardForest/'
 elif os.uname()[1] == 'Marks-MacBook-Pro.local':
