@@ -87,6 +87,7 @@ def initTECOrun(callback=None,**kwargs):
             model=kwargs['model']
             if model=='grassland':
                 model='grassland'
+                dda_freq=None
             else:
                 if 'dda_freq' in kwargs:
                     dda_freq=kwargs['dda_freq']
