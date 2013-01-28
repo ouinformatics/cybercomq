@@ -166,7 +166,7 @@ def runTeco(task_id=None,model=None, dda_freq=1 ,**kwargs):#runDir):
         elif model=='DDA':
             call(["./runTeco", wkdir + "/sitepara_tcs.txt", wkdir + "/Results.txt","1", str(dda_freq)],stdout=logfile,stderr=STDOUT)
         elif model =='grassland':
-            call(["./runTeco", wkdir + "/sitepara_tcs.txt", wkdir + "forcing.txt"],stdout=logfile,stderr=STDOUT)
+            call(["./runTeco", wkdir + "/sitepara_tcs.txt", wkdir + "/forcing.txt"],stdout=logfile,stderr=STDOUT)
             
         call(['rm',wkdir + '/runTeco'])
         #call(['rm',wkdir + '/HarvardForest_hr_Chuixiang.txt'])
