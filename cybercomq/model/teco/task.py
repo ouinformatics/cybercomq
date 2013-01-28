@@ -115,12 +115,12 @@ def initTECOrun(callback=None,**kwargs):
             set_site_param(initTECOrun.request.id,param)
             custom_tecov2_setup(initTECOrun.request.id,site,param['inputfile'],base_yrs, forecast,modWeather,upload)
 
-        #Set NEE data for model DDA and Legacy TECO Model
-        if upload:
-            custom_tecov2_nee(initTECOrun.request.id,site,param['NEEfile'],base_yrs, forecast,upload)
-        else:
-            if site == 'US-HA1':
+            #Set NEE data for model DDA and Legacy TECO Model
+            if upload:
                 custom_tecov2_nee(initTECOrun.request.id,site,param['NEEfile'],base_yrs, forecast,upload)
+            else:
+                if site == 'US-HA1':
+                    custom_tecov2_nee(initTECOrun.request.id,site,param['NEEfile'],base_yrs, forecast,upload)
 
         if callback:
             result=subtask(callback).delay(task_id=str(initTECOrun.request.id),model=model,dda_freq=dda_freq)
