@@ -8,10 +8,10 @@ from subprocess import call,STDOUT
 import os,commands,json,ast
 import math
 mongoHost = 'fire.rccc.ou.edu'
-if os.uname()[1] == 'ip-129-15-40-58.rccc.ou.edu':
-    basedir = '/Users/mstacy/Desktop/TECO_HarvardForest/'
+if os.uname()[1] == 'dhcp-213-41.rccc.ou.edu':
+    basedir = '/Users/mstacy/Desktop/projects/TECO_HarvardForest/'
 elif os.uname()[1] == 'Marks-MacBook-Pro.local':
-    basedir = '/Users/mstacy/Desktop/TECO_HarvardForest/'
+    basedir = '/Users/mstacy/Desktop/projects/TECO_HarvardForest/'
 elif os.uname()[1] == 'earth.rccc.ou.edu':
     basedir = '/scratch/cybercom/model/teco/'
 #elif os.uname()[1] == 'static.cybercommons.org':
@@ -42,7 +42,9 @@ def runTECOworkflow(site=None,base_yrs=None,forecast=None,siteparam=None,mod_wea
         else:
             result=initTECOrun.delay(site=site,base_yrs=base_yrs,forecast=forecast,mod_weather=mod_weather,model=model,dda_freq=dda_freq,upload=upload,callback=subtask(runTeco))
             return {'task_id':result.task_id,'task_name':result.task_name}
-        
+    elif model =='grassland':
+        result=initTECOrun.delay(site=site,base_yrs=base_yrs,forecast=forecast,siteparam=siteparam,mod_weather=mod_weather,model=model,upload=upload,callback=subtask(runTeco))
+        return {'task_id':result.task_id,'task_name':result.task_name}    
     else:
         raise "Model parameter must be either TECO_f1 or DDA"
 @task()
@@ -83,10 +85,13 @@ def initTECOrun(callback=None,**kwargs):
             modWeather={}
         if 'model' in kwargs:
             model=kwargs['model']
-            if 'dda_freq' in kwargs:
-                dda_freq=kwargs['dda_freq']
+            if model=='grassland':
+                model='grassland'
             else:
-                dda_freq=1
+                if 'dda_freq' in kwargs:
+                    dda_freq=kwargs['dda_freq']
+                else:
+                    dda_freq=1
         else:
             model='TECO_f1'
             dda_freq=None
@@ -96,12 +101,19 @@ def initTECOrun(callback=None,**kwargs):
         #create link to teco executable
         if model=='TECO_f1':
             call(["ln","-s",basedir + "runTeco",newDir + "/runTeco"])
-        else:
+        elif model=='DDA':
             call(["ln","-s",basedir + "prod_ver/runTeco_dda",newDir + "/runTeco"])
-
+        elif model=='grassland':
+            call(["ln","-s",basedir + "grass_ver/grassTECO",newDir + "/runTeco"])
+        else:
+            raise "Model does not exist. Please set Model available (TECO_f1,DDA,grassland)" 
         #Set paramater file
-        set_site_param(initTECOrun.request.id,param)
-        custom_tecov2_setup(initTECOrun.request.id,site,param['inputfile'],base_yrs, forecast,modWeather,upload)
+        if model=='grassland':
+            set_site_param_grass(initTECOrun.request.id,param)
+            call(["ln","-s",basedir + "grass_ver/TECO_amb_h.txt",newDir + "/forcing.txt"])
+        else:
+            set_site_param(initTECOrun.request.id,param)
+            custom_tecov2_setup(initTECOrun.request.id,site,param['inputfile'],base_yrs, forecast,modWeather,upload)
 
         #Set NEE data for model DDA and Legacy TECO Model
         if upload:
@@ -150,8 +162,11 @@ def runTeco(task_id=None,model=None, dda_freq=1 ,**kwargs):#runDir):
         logfile= open(wkdir + "/logfile.txt","w")
         if model == None or model == 'TECO_f1':
             call(["./runTeco", wkdir + "/sitepara_tcs.txt", wkdir + "/Results.txt"],stdout=logfile,stderr=STDOUT)
-        else:
+        elif model=='DDA':
             call(["./runTeco", wkdir + "/sitepara_tcs.txt", wkdir + "/Results.txt","1", str(dda_freq)],stdout=logfile,stderr=STDOUT)
+        elif model =='grassland':
+            call(["./runTeco", wkdir + "/sitepara_tcs.txt", wkdir + "forcing.txt"],stdout=logfile,stderr=STDOUT)
+            
         call(['rm',wkdir + '/runTeco'])
         #call(['rm',wkdir + '/HarvardForest_hr_Chuixiang.txt'])
         #call(['./runTeco',wkdir + "/sitepara_tcs.txt",wkdr + "/US-HA1_TECO_04.txt"])
@@ -161,19 +176,21 @@ def runTeco(task_id=None,model=None, dda_freq=1 ,**kwargs):#runDir):
        # call(['scp', wkdir +"/US-HA1_TECO_04.txt", "mstacy@static.cybercommons.org:" + webloc])
         call(['scp','-r', wkdir , "mstacy@static.cybercommons.org:" + webloc])
         #load to mongo
-        dld = dataloader.Mongo_load('teco',host = mongoHost )
-        collection='taskresults'
-        adddict ={'task_id': task_id}
-        dld.file2mongo(wkdir + "/Results.txt",collection,file_type='fixed_width',addDict=adddict,specificOperation=set_observed_date)
+        if model!= 'grassland':
+            dld = dataloader.Mongo_load('teco',host = mongoHost )
+            collection='taskresults'
+            adddict ={'task_id': task_id}
+            dld.file2mongo(wkdir + "/Results.txt",collection,file_type='fixed_width',addDict=adddict,specificOperation=set_observed_date)
 
 
         #http= "http://static.cybercommons.org/queue/model/teco/" + task_id + ".txt"
         temp = "<h5>Result Files</h5><br/>"
         http= "http://static.cybercommons.org/queue/model/teco/" + task_id
         temp = temp +  ' <a href="' + http + '" target="_blank">' + http + '</a><br/>'
-        temp = temp + "<h5>TECO Graphs</h5><br/>"
-        http= "http://static.cybercommons.org/apptest/teco_plot/?task_id=" + task_id 
-        temp = temp +  ' <a href="' + http + '" target="_blank">' + http + '</a><br/>'
+        if model!= 'grassland':
+            temp = temp + "<h5>TECO Graphs</h5><br/>"
+            http= "http://static.cybercommons.org/apptest/teco_plot/?task_id=" + task_id 
+            temp = temp +  ' <a href="' + http + '" target="_blank">' + http + '</a><br/>'
         #temp = temp + "<br/><h5>Graph currently under Construction</h5>"
         #http= "http://static.cybercommons.org/queue/model/teco/" + task_id
         return temp #http #'TECO Model run Complete'
@@ -198,7 +215,25 @@ def set_observed_date(row):
     row['month']=observed_date.month
     row['day']=row['doy']
     return row
-
+def set_site_param_grass(task_id,param):
+    head=['Lat','Co2ca','output','newline','a1','Ds0','Vcmx0','extku','xfang','alpha','stom_n','newline','Wsmax','Wsmin','newline',
+          'rdepth','rfibre','newline','SLA','LAIMAX','LAIMIN','newline','Rootmax','Stemmax','SenS','SenR','newline']
+    wkdir =basedir + "celery_data/" + str(task_id)
+    os.chdir(wkdir)
+    header=''
+    value=''
+    f1 = open('sitepara_tcs.txt','w')
+    for col in head:
+        if col =='newline':
+            f1.write(header + '\n') 
+            f1.write(value + '\n')
+            header=''
+            value=''
+        else:
+            header = header + col + "\t"
+            value = value + str(param[col]) + "\t"
+    f1.close()
+        
 def set_site_param(task_id,param):
     ''' Param is a dictionary with the site paramiters'''
     head =[ 'site','vegtype','inputfile','NEEfile','outputfile','lat','Longitude','wsmax','wsmin','gddonset',
