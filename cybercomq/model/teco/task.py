@@ -290,8 +290,8 @@ def custom_teco_grassv2_setup(task_id,site,filename,years,forecast,modWeather,up
     startyr = yr[0]
     endyr =yr[1] 
     forc = ast.literal_eval(forecast)
-    set_grass_input_data(db,site,head,wd,outfile,start,end,forc,1,modWeather,upload)    
-def set_grass_input_data(db,site,fields,wd,outfile,start,end,forc,divby,modWeather,upload):
+    set_grass_input_data(db,site,head,outfile,start,end,forc,1,modWeather,upload)    
+def set_grass_input_data(db,site,fields,outfile,start,end,forc,divby,modWeather,upload):
     #Set result set from mongo
     halfPrecip=0.0
     
