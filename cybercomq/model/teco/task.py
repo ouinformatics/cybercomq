@@ -111,7 +111,8 @@ def initTECOrun(callback=None,**kwargs):
         #Set paramater file
         if model=='grassland':
             set_site_param_grass(initTECOrun.request.id,param)
-            call(["ln","-s",basedir + "grass_ver/TECO_amb_h.txt",newDir + "/forcing.txt"])
+            custom_teco_grassv2_setup(initTECOrun.request.id,site,'forcing.txt',base_yrs,forecast,modWeather,upload)
+            #call(["ln","-s",basedir + "grass_ver/TECO_amb_h.txt",newDir + "/forcing.txt"])
         else:
             set_site_param(initTECOrun.request.id,param)
             custom_tecov2_setup(initTECOrun.request.id,site,param['inputfile'],base_yrs, forecast,modWeather,upload)
@@ -274,6 +275,51 @@ def set_site_param(task_id,param):
     f2.write(initvalue)
     #f2.write(workaround)
     f2.close()
+def custom_teco_grassv2_setup(task_id,site,filename,years,forecast,modWeather,upload):
+    header='year    doy hour    tair    Tsoil   VDEF    RH  precp   rad_h'
+    head=['year', 'doy', 'hour', 'tair', 'Tsoil', 'VDEF', 'RH', 'precp', 'rad_h']
+    #set working diectory
+    wkdir = basedir + "celery_data/" + str(task_id)
+    os.chdir(wkdir)
+    #open file and set header
+    outfile = open(filename,"w")
+    outfile.write(header + '\n')
+    db = Connection(mongoHost).teco
+    #safe eval to get start and end dates
+    yr=ast.literal_eval(years)
+    startyr = yr[0]
+    endyr =yr[1] 
+    forc = ast.literal_eval(forecast)
+    set_grass_input_data(db,site,head,wd,outfile,start,end,forc,1,modWeather,upload)    
+def set_grass_input_data(db,site,fields,wd,outfile,start,end,forc,divby,modWeather,upload):
+    #Set result set from mongo
+    halfPrecip=0.0
+    
+    #if upload:
+    #    result = db.uploaded_data.find({"Site":site,'user':upload,"observed_date":{"$gte": start, "$lt": end}}).sort([('observed_date',1)])
+    #else:
+    result = db.forcing_grass.find({"Site":site,"year":{"$gte": start, "$lte": end}}).sort([('year',1),('doy',1),('hour',1)])
+    for row in result:
+        rw=''
+        for col in fields:
+            if col == 'rad_h':
+                rw = rw +  str(modify_weather(row[col],col,modWeather))
+            else:
+                rw = rw +  str(modify_weather(row[col],col,modWeather)) + "\t"
+        outfile.write(rw + '\n')
+    for forc_yr in forc:
+        f0=isLeap(forc_yr[0])
+        f1=isLeap(forc_yr[1])
+        result= db.forcing_grass.find({'Site':site,'year':forc_yr[1]}).sort([('doy',1),('hour',1)])
+        for row in result:
+            rw=''
+            for col in fields:
+                if col == 'rad_h':
+                    rw = rw +  str(modify_weather(row[col],col,modWeather))
+                elif col =='year':
+                    rw = rw +  str(forc_yr[0]) + "\t"
+                else:
+                    rw = rw +  str(modify_weather(row[col],col,modWeather)) + "\t"
 def custom_tecov2_setup(task_id,site,filename,years,forecast,modWeather,upload):
     # Header row
     header='Year  DOY  hour  T_air q1   Q_air  q2   Wind_speed q3     Precip   q4   Pressure   q5  R_global_in q6   R_longwave_in q7   CO2'
