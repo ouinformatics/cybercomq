@@ -287,8 +287,8 @@ def custom_teco_grassv2_setup(task_id,site,filename,years,forecast,modWeather,up
     db = Connection(mongoHost).teco
     #safe eval to get start and end dates
     yr=ast.literal_eval(years)
-    startyr = yr[0]
-    endyr =yr[1] 
+    start = yr[0]
+    end =yr[1] 
     forc = ast.literal_eval(forecast)
     set_grass_input_data(db,site,head,outfile,start,end,forc,1,modWeather,upload)    
 def set_grass_input_data(db,site,fields,outfile,start,end,forc,divby,modWeather,upload):
