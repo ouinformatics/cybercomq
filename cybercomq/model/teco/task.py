@@ -65,8 +65,6 @@ def initTECOrun(callback=None,**kwargs):
             raise "site is a required parameter"
         if 'base_yrs' in kwargs:
             base_yrs = kwargs['base_yrs']
-            tem=ast.literal_eval(base_yrs)
-                
         else:
             raise "base_yrs is a required parameter"
         if 'forecast' in kwargs:
@@ -115,7 +113,8 @@ def initTECOrun(callback=None,**kwargs):
         #Set paramater file
         if model=='grassland':
             temp = ast.literal_eval(base_yrs)
-            ryrs = str(temp[1]-temp[0] + 1)
+            ftemp =len(ast.literal_eval(forecast))
+            ryrs = str((temp[1]-temp[0]) + ftemp + 1)
             spinup=param['spinup_years']
             set_site_param_grass(initTECOrun.request.id,param)
             custom_teco_grassv2_setup(initTECOrun.request.id,site,'forcing.txt',base_yrs,forecast,modWeather,upload)
@@ -301,7 +300,6 @@ def custom_teco_grassv2_setup(task_id,site,filename,years,forecast,modWeather,up
 def set_grass_input_data(db,site,fields,outfile,start,end,forc,divby,modWeather,upload):
     #Set result set from mongo
     halfPrecip=0.0
-    
     #if upload:
     #    result = db.uploaded_data.find({"Site":site,'user':upload,"observed_date":{"$gte": start, "$lt": end}}).sort([('observed_date',1)])
     #else:
@@ -315,8 +313,8 @@ def set_grass_input_data(db,site,fields,outfile,start,end,forc,divby,modWeather,
                 rw = rw +  str(modify_weather(row[col],col,modWeather)) + "\t"
         outfile.write(rw + '\n')
     for forc_yr in forc:
-        f0=isLeap(forc_yr[0])
-        f1=isLeap(forc_yr[1])
+        #f0=isLeap(forc_yr[0])
+        #f1=isLeap(forc_yr[1])
         result= db.forcing_grass.find({'Site':site,'year':forc_yr[1]}).sort([('doy',1),('hour',1)])
         for row in result:
             rw=''
@@ -327,6 +325,7 @@ def set_grass_input_data(db,site,fields,outfile,start,end,forc,divby,modWeather,
                     rw = rw +  str(forc_yr[0]) + "\t"
                 else:
                     rw = rw +  str(modify_weather(row[col],col,modWeather)) + "\t"
+            outfile.write(rw + '\n')
 def custom_tecov2_setup(task_id,site,filename,years,forecast,modWeather,upload):
     # Header row
     header='Year  DOY  hour  T_air q1   Q_air  q2   Wind_speed q3     Precip   q4   Pressure   q5  R_global_in q6   R_longwave_in q7   CO2'
