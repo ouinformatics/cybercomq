@@ -115,7 +115,7 @@ def initTECOrun(callback=None,**kwargs):
         #Set paramater file
         if model=='grassland':
             temp = ast.literal_eval(base_yrs)
-            ryrs = temp[1]-temp[0] + 1
+            ryrs = str(temp[1]-temp[0] + 1)
             spinup=param['spinup_years']
             set_site_param_grass(initTECOrun.request.id,param)
             custom_teco_grassv2_setup(initTECOrun.request.id,site,'forcing.txt',base_yrs,forecast,modWeather,upload)
@@ -158,7 +158,7 @@ def getLocations(**kwargs):
     return findloc
 
 @task()
-def runTeco(task_id=None,model=None, dda_freq=1 ,spinup=1450,runyears=None,**kwargs):#runDir):
+def runTeco(task_id=None,model=None, dda_freq=1 ,spinup='1450',runyears='',**kwargs):#runDir):
     ''' run teco model 
         param = {url to files files required to run model}
     '''
