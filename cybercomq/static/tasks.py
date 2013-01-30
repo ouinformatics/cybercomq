@@ -71,7 +71,6 @@ def teco_upload(user_id,filename,file_type='fixed_width',addDict=None,specificOp
                 for item in data['task']:
                     if item['file']==file_name and item['taskname']==taskname:
                         return {'status':False,'description':'Duplicate filename: Filename must be unique, please change the name of file to upload.'} 
-
         #load into Mongo
         if match:
             addDt = {'user':user_id,'Site':match,'location':match}
@@ -86,7 +85,7 @@ def teco_upload(user_id,filename,file_type='fixed_width',addDict=None,specificOp
             collection = 'uploaded_nee_data'
         else:
             collection = 'uploaded_data'
-        #8*******************************************************
+        #********************************************************
         filename= '/static/cache/test/teco_fileupload/' + filename
         f1 = open(filename,'r')
         header = f1.readline()
@@ -119,18 +118,58 @@ def teco_upload(user_id,filename,file_type='fixed_width',addDict=None,specificOp
             #return Status
             return {'status':True,'description':'File loaded to TECO Data Store, please upload Observed NEE file'}
     except Exception as inst:
-        #try:
-            #db = pymongo.Connection(MONGO_CATALOG_HOST + ":" + str(MONGO_CATALOG_PORT))
-            #data = db['cybercom_upload']['data'].find_one({'user':user_id})
-        #    info ={'taskname':taskname,'file':file_name,'error':str(inst)}
-        #    if data:
-        #        data['task'].append(info)
-        #    else:
-        #        data = {'user':user_id,'task':[info]}
-        #    db['cybercom_upload']['data'].save(data)
-        #    return {'status':False,'description':str(inst)}
-        #except Exception as inst1:
-        return {'status':False,'description':"(" + str(inst) + ")" }
+        try:
+            db = pymongo.Connection(MONGO_DATA_HOST).teco
+            if match:
+                db.uploaded_nee_data.remove({'user':user_id,'Site':match,'location':match})
+            else:
+                db.uploaded_data.remove({'user':user_id,'Site':file_name,'location':file_name})
+            tag=" - Data Removed from TECO Data Store"
+        except:
+            tag=""
+        return {'status':False,'description':"(" + str(inst) + tag + ")" }
+@task()
+def teco_upload_grass(user_id,filename,file_type='fixed_width',addDict=None,specificOperation=None,seperator=',',skiplines=0,skiplinesAfterHeader=0):
+    try:
+        file_name = filename
+        db = pymongo.Connection(MONGO_CATALOG_HOST + ":" + str(MONGO_CATALOG_PORT))
+        data = db['cybercom_upload']['data'].find_one({'user':user_id})
+        taskname='cybercomq.static.tasks.teco_upload_grass'
+        info ={'taskname':taskname,'file':file_name}
+        #check if file already exists
+        if data:
+            for item in data['task']:
+                if item['file']==file_name and item['taskname']==taskname:
+                    return {'status':False,'description':'Duplicate filename: Filename must be unique, please change the name of file to upload.'}
+        addDt = {'user':user_id,'Site':file_name}
+        if addDict:
+            addDict.update(addDt)
+        else:
+            addDict = addDt
+        collection = 'uploaded_grass'
+        filename = '/static/cache/test/teco_fileupload/' + filename
+        f1 = open(filename,'r')
+        header = f1.readline()
+        f1.close()
+        dataload = ddl.Mongo_load('teco',host=MONGO_DATA_HOST)
+        dataload.file2mongo(filename,collection,file_type,addDict,None,seperator,skiplines,skiplinesAfterHeader)
+        if data:
+            data['task'].append(info)
+        else:
+            data = {'user':user_id,'task':[info]}
+        db['cybercom_upload']['data'].save(data)
+        return {'status':True,'description':'File loaded to TECO Data Store.'}
+
+    except:
+        try:
+            db = pymongo.Connection(MONGO_DATA_HOST).teco
+            db.uploaded_grass.remove({'user':user_id,'Site':file_name})
+            tag=" - Data Removed from TECO Data Store"
+        except:
+            tag=" - Error occured in data cleanup"
+        return {'status':False,'description':"(" + str(inst) + tag + ")" }
+        
+
 def calc_obs_date(row):
     try:
         doy = row["DOY"]
