@@ -158,7 +158,7 @@ def getLocations(**kwargs):
     return findloc
 
 @task()
-def runTeco(task_id=None,model=None, dda_freq=1 ,spinup=1450,runyears=None**kwargs):#runDir):
+def runTeco(task_id=None,model=None, dda_freq=1 ,spinup=1450,runyears=None,**kwargs):#runDir):
     ''' run teco model 
         param = {url to files files required to run model}
     '''
