@@ -65,6 +65,8 @@ def initTECOrun(callback=None,**kwargs):
             raise "site is a required parameter"
         if 'base_yrs' in kwargs:
             base_yrs = kwargs['base_yrs']
+            tem=ast.literal_eval(base_yrs)
+                
         else:
             raise "base_yrs is a required parameter"
         if 'forecast' in kwargs:
@@ -107,9 +109,14 @@ def initTECOrun(callback=None,**kwargs):
         elif model=='grassland':
             call(["ln","-s",basedir + "grass_ver/grassTECO",newDir + "/runTeco"])
         else:
-            raise "Model does not exist. Please set Model available (TECO_f1,DDA,grassland)" 
+            raise "Model does not exist. Please set Model available (TECO_f1,DDA,grassland)"
+        spinup=None
+        ryrs=None
         #Set paramater file
         if model=='grassland':
+            temp = ast.literal_eval(base_yrs)
+            ryrs = temp[1]-temp[0] + 1
+            spinup=param['spinup_years']
             set_site_param_grass(initTECOrun.request.id,param)
             custom_teco_grassv2_setup(initTECOrun.request.id,site,'forcing.txt',base_yrs,forecast,modWeather,upload)
             #call(["ln","-s",basedir + "grass_ver/TECO_amb_h.txt",newDir + "/forcing.txt"])
@@ -125,7 +132,7 @@ def initTECOrun(callback=None,**kwargs):
                     custom_tecov2_nee(initTECOrun.request.id,site,param['NEEfile'],base_yrs, forecast,upload)
 
         if callback:
-            result=subtask(callback).delay(task_id=str(initTECOrun.request.id),model=model,dda_freq=dda_freq)
+            result=subtask(callback).delay(task_id=str(initTECOrun.request.id),model=model,dda_freq=dda_freq,spinup=spinup,runyears=ryrs)
             return {'task_id':result.task_id,'task_name':result.task_name}
         else:
             return newDir
@@ -151,7 +158,7 @@ def getLocations(**kwargs):
     return findloc
 
 @task()
-def runTeco(task_id=None,model=None, dda_freq=1 ,**kwargs):#runDir):
+def runTeco(task_id=None,model=None, dda_freq=1 ,spinup=1450,runyears=None**kwargs):#runDir):
     ''' run teco model 
         param = {url to files files required to run model}
     '''
@@ -167,7 +174,7 @@ def runTeco(task_id=None,model=None, dda_freq=1 ,**kwargs):#runDir):
         elif model=='DDA':
             call(["./runTeco", wkdir + "/sitepara_tcs.txt", wkdir + "/Results.txt","1", str(dda_freq)],stdout=logfile,stderr=STDOUT)
         elif model =='grassland':
-            call(["./runTeco", wkdir + "/sitepara_tcs.txt", wkdir + "/forcing.txt"],stdout=logfile,stderr=STDOUT)
+            call(["./runTeco", wkdir + "/sitepara_tcs.txt", wkdir + "/forcing.txt",spinup,runyears],stdout=logfile,stderr=STDOUT)
             
         call(['rm',wkdir + '/runTeco'])
         #call(['rm',wkdir + '/HarvardForest_hr_Chuixiang.txt'])
