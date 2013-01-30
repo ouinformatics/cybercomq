@@ -303,9 +303,9 @@ def set_grass_input_data(db,site,fields,outfile,start,end,forc,divby,modWeather,
         rw=''
         for col in fields:
             if col == 'rad_h':
-                rw = rw +  str(modify_weather(row[col],col,modWeather))
+                rw = rw +  str(modify_weather(ast.literal_eval(row[col]),col,modWeather))
             else:
-                rw = rw +  str(modify_weather(row[col],col,modWeather)) + "\t"
+                rw = rw +  str(modify_weather(ast.literal_eval(row[col]),col,modWeather)) + "\t"
         outfile.write(rw + '\n')
     for forc_yr in forc:
         f0=isLeap(forc_yr[0])
@@ -315,11 +315,11 @@ def set_grass_input_data(db,site,fields,outfile,start,end,forc,divby,modWeather,
             rw=''
             for col in fields:
                 if col == 'rad_h':
-                    rw = rw +  str(modify_weather(row[col],col,modWeather))
+                    rw = rw +  str(modify_weather(ast.literal_eval(row[col]),col,modWeather))
                 elif col =='year':
                     rw = rw +  str(forc_yr[0]) + "\t"
                 else:
-                    rw = rw +  str(modify_weather(row[col],col,modWeather)) + "\t"
+                    rw = rw +  str(modify_weather(ast.literal_eval(row[col]),col,modWeather)) + "\t"
 def custom_tecov2_setup(task_id,site,filename,years,forecast,modWeather,upload):
     # Header row
     header='Year  DOY  hour  T_air q1   Q_air  q2   Wind_speed q3     Precip   q4   Pressure   q5  R_global_in q6   R_longwave_in q7   CO2'
