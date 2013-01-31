@@ -296,14 +296,18 @@ def custom_teco_grassv2_setup(task_id,site,filename,years,forecast,modWeather,up
     start = yr[0]
     end =yr[1] 
     forc = ast.literal_eval(forecast)
-    set_grass_input_data(db,site,head,outfile,start,end,forc,1,modWeather,upload)    
-def set_grass_input_data(db,site,fields,outfile,start,end,forc,divby,modWeather,upload):
+    if upload:
+        col='uploaded_grass'
+    else:
+        col='forcing_grass'
+    set_grass_input_data(db,site,head,outfile,start,end,forc,1,modWeather,upload,col)    
+def set_grass_input_data(db,site,fields,outfile,start,end,forc,divby,modWeather,upload,collection):
     #Set result set from mongo
     halfPrecip=0.0
     #if upload:
     #    result = db.uploaded_data.find({"Site":site,'user':upload,"observed_date":{"$gte": start, "$lt": end}}).sort([('observed_date',1)])
     #else:
-    result = db.forcing_grass.find({"Site":site,"year":{"$gte": start, "$lte": end}}).sort([('year',1),('doy',1),('hour',1)])
+    result = db[collection].find({"Site":site,"year":{"$gte": start, "$lte": end}}).sort([('year',1),('doy',1),('hour',1)])
     for row in result:
         rw=''
         for col in fields:
@@ -315,7 +319,7 @@ def set_grass_input_data(db,site,fields,outfile,start,end,forc,divby,modWeather,
     for forc_yr in forc:
         #f0=isLeap(forc_yr[0])
         #f1=isLeap(forc_yr[1])
-        result= db.forcing_grass.find({'Site':site,'year':forc_yr[1]}).sort([('doy',1),('hour',1)])
+        result= db[collection].find({'Site':site,'year':forc_yr[1]}).sort([('doy',1),('hour',1)])
         for row in result:
             rw=''
             for col in fields:
