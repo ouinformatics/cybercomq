@@ -184,21 +184,31 @@ def runTeco(task_id=None,model=None, dda_freq=1 ,spinup='1450',runyears='',**kwa
        # call(['scp', wkdir +"/US-HA1_TECO_04.txt", "mstacy@static.cybercommons.org:" + webloc])
         call(['scp','-r', wkdir , "mstacy@static.cybercommons.org:" + webloc])
         #load to mongo
+        #if model!= 'grassland':
+        dld = dataloader.Mongo_load('teco',host = mongoHost )
+        collection='taskresults'
+        adddict ={'task_id': task_id}
         if model!= 'grassland':
-            dld = dataloader.Mongo_load('teco',host = mongoHost )
-            collection='taskresults'
-            adddict ={'task_id': task_id}
             dld.file2mongo(wkdir + "/Results.txt",collection,file_type='fixed_width',addDict=adddict,specificOperation=set_observed_date)
-
+        else:
+            dld.file2mongo(wkdir + "/TECO_C_daily.csv",collection,file_type='csv',addDict={'task_id': task_id+'Cdaily'},specificOperation=set_observed_date)
+            dld.file2mongo(wkdir + "/TECO_pools_C.csv",collection,file_type='csv',addDict={'task_id': task_id+'Cpools'},specificOperation=set_observed_date)
 
         #http= "http://static.cybercommons.org/queue/model/teco/" + task_id + ".txt"
-        temp = "<h5>Result Files</h5><br/>"
+        temp = "<h4>Result Files</h4><br/>"
         http= "http://static.cybercommons.org/queue/model/teco/" + task_id
         temp = temp +  ' <a href="' + http + '" target="_blank">' + http + '</a><br/>'
+        temp = temp + "<h4>TECO Graphs</h4><br/>"
         if model!= 'grassland':
-            temp = temp + "<h5>TECO Graphs</h5><br/>"
             http= "http://static.cybercommons.org/apptest/teco_plot/?task_id=" + task_id 
             temp = temp +  ' <a href="' + http + '" target="_blank">' + http + '</a><br/>'
+        else:
+            temp = temp + "<h6>Daily Carbon</h6><br/>"
+            http= "http://static.cybercommons.org/apptest/teco_plot/?task_id=" + task_id + 'Cdaily'
+            temp = temp +  ' <a href="' + http + '" target="_blank">' + http + '</a><br/>' 
+            temp = temp + "<h6>Carbon Pools</h6><br/>"
+            http= "http://static.cybercommons.org/apptest/teco_plot/?task_id=" + task_id + 'Cpools'
+            temp = temp +  ' <a href="' + http + '" target="_blank">' + http + '</a><br/>' 
         #temp = temp + "<br/><h5>Graph currently under Construction</h5>"
         #http= "http://static.cybercommons.org/queue/model/teco/" + task_id
         return temp #http #'TECO Model run Complete'
