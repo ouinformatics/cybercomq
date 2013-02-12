@@ -131,7 +131,7 @@ def initTECOrun(callback=None,**kwargs):
                     custom_tecov2_nee(initTECOrun.request.id,site,param['NEEfile'],base_yrs, forecast,upload)
 
         if callback:
-            result=subtask(callback).delay(task_id=str(initTECOrun.request.id),model=model,dda_freq=dda_freq,spinup=spinup,runyears=ryrs)
+            result=subtask(callback).delay(task_id=str(initTECOrun.request.id),model=model,dda_freq=dda_freq,spinup=spinup,runyears=ryrs,base_yrs=base_yrs)
             return {'task_id':result.task_id,'task_name':result.task_name}
         else:
             return newDir
@@ -157,7 +157,7 @@ def getLocations(**kwargs):
     return findloc
 
 @task()
-def runTeco(task_id=None,model=None, dda_freq=1 ,spinup='1450',runyears='',**kwargs):#runDir):
+def runTeco(task_id=None,model=None, dda_freq=1 ,spinup='1450',runyears='',base_yrs=None,**kwargs):#runDir):
     ''' run teco model 
         param = {url to files files required to run model}
     '''
@@ -191,8 +191,8 @@ def runTeco(task_id=None,model=None, dda_freq=1 ,spinup='1450',runyears='',**kwa
         if model!= 'grassland':
             dld.file2mongo(wkdir + "/Results.txt",collection,file_type='fixed_width',addDict=adddict,specificOperation=set_observed_date)
         else:
-            dld.file2mongo(wkdir + "/TECO_C_daily.csv",collection,file_type='csv',addDict={'task_id': task_id+'Cdaily'},specificOperation=set_observed_date)
-            dld.file2mongo(wkdir + "/TECO_pools_C.csv",collection,file_type='csv',addDict={'task_id': task_id+'Cpools'},specificOperation=set_observed_date)
+            dld.file2mongo(wkdir + "/TECO_C_daily.csv",collection,file_type='csv',addDict={'task_id': task_id+'Cdaily','year':ast.literal_eval(base_yrs)[0]},specificOperation=set_observed_date_grassland)
+            dld.file2mongo(wkdir + "/TECO_pools_C.csv",collection,file_type='csv',addDict={'task_id': task_id+'Cpools'})
 
         #http= "http://static.cybercommons.org/queue/model/teco/" + task_id + ".txt"
         temp = "<h4>Result Files</h4><br/>"
@@ -232,6 +232,18 @@ def set_observed_date(row):
     row['week']=observed_date.isocalendar()[1]
     row['month']=observed_date.month
     row['day']=row['doy']
+    return row
+def set_obs_date_grassland(row):
+    odate = datetime(int(row['year']),1,1,0,0,0)
+    try:
+        doy = timedelta(days=int(row['d'])-1)
+    except:
+        doy=0
+    observed_date = odate + doy
+    row['observed_date']=observed_date
+    row['week']=observed_date.isocalendar()[1]
+    row['month']=observed_date.month
+    row['day']=row['d']
     return row
 def set_site_param_grass(task_id,param):
     head=['Lat','Co2ca','output','newline','a1','Ds0','Vcmx0','extku','xfang','alpha','stom_n','newline','Wsmax','Wsmin','newline',
