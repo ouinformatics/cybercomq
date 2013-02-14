@@ -204,11 +204,11 @@ def runTeco(task_id=None,model=None, dda_freq=1 ,spinup='1450',runyears='',base_
             temp = temp +  ' <a href="' + http + '" target="_blank">' + http + '</a><br/>'
         else:
             temp = temp + "<h6>Daily Carbon</h6><br/>"
-            http= "http://static.cybercommons.org/apptest/teco_plot/?task_id=" + task_id + 'Cdaily'
+            http= "http://static.cybercommons.org/apptest/teco_plot/?task_id=" + task_id + 'Cdaily&model=TECO_Grassland_Cdaily'
             temp = temp +  ' <a href="' + http + '" target="_blank">' + http + '</a><br/>' 
-            temp = temp + "<h6>Carbon Pools</h6><br/>"
-            http= "http://static.cybercommons.org/apptest/teco_plot/?task_id=" + task_id + 'Cpools'
-            temp = temp +  ' <a href="' + http + '" target="_blank">' + http + '</a><br/>' 
+            #temp = temp + "<h6>Carbon Pools</h6><br/>"
+            #http= "http://static.cybercommons.org/apptest/teco_plot/?task_id=" + task_id + 'Cpools'
+            #temp = temp +  ' <a href="' + http + '" target="_blank">' + http + '</a><br/>' 
         #temp = temp + "<br/><h5>Graph currently under Construction</h5>"
         #http= "http://static.cybercommons.org/queue/model/teco/" + task_id
         return temp #http #'TECO Model run Complete'
