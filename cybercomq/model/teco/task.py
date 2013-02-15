@@ -191,7 +191,7 @@ def runTeco(task_id=None,model=None, dda_freq=1 ,spinup='1450',runyears='',base_
         if model!= 'grassland':
             dld.file2mongo(wkdir + "/Results.txt",collection,file_type='fixed_width',addDict=adddict,specificOperation=set_observed_date)
         else:
-            dld.file2mongo(wkdir + "/TECO_C_daily.csv",collection,file_type='csv',addDict={'task_id': task_id+'Cdaily','year':ast.literal_eval(base_yrs)[0]},specificOperation=set_obs_date_grassland)
+            dld.file2mongo(wkdir + "/TECO_C_daily.csv",collection,file_type='csv',addDict={'task_id': task_id+'Cdaily','startyear':ast.literal_eval(base_yrs)[0]},specificOperation=set_obs_date_grassland)
             dld.file2mongo(wkdir + "/TECO_pools_C.csv",collection,file_type='csv',addDict={'task_id': task_id+'Cpools'})
 
         #http= "http://static.cybercommons.org/queue/model/teco/" + task_id + ".txt"
@@ -234,6 +234,7 @@ def set_observed_date(row):
     row['day']=row['doy']
     return row
 def set_obs_date_grassland(row):
+    row['year']=(row['startyear']+row['year'])-1
     odate = datetime(int(row['year']),1,1,0,0,0)
     try:
         doy = timedelta(days=int(row['d'])-1)
