@@ -234,7 +234,7 @@ def set_observed_date(row):
     row['day']=row['doy']
     return row
 def set_obs_date_grassland(row):
-    row['year']=(row['startyear']+row['year'])-1
+    row['year']=(row['startyear']+row['yr'])-1
     odate = datetime(int(row['year']),1,1,0,0,0)
     try:
         doy = timedelta(days=int(row['d'])-1)
