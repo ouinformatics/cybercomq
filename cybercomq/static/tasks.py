@@ -18,6 +18,7 @@ MONGO_CATALOG_PORT = config.get('catalog','port')
 MONGO_DATA_HOST = config.get('database','host')
 DATA_COMMONS='TECO_uploads'
 DATA_COLLECTION='data'
+CHECK_FILE_LOCATION = ['/static/cache/test/teco_fileupload/','/static/cache/prod/teco_fileupload/']
 #BROKER_URL = "amqplib://jduckles:cybercommons@fire.rccc.ou.edu/cybercom_test"
 
 @task()
@@ -85,8 +86,15 @@ def teco_upload(user_id,filename,file_type='fixed_width',addDict=None,specificOp
             collection = 'uploaded_nee_data'
         else:
             collection = 'uploaded_data'
-        #********************************************************
-        filename= '/static/cache/test/teco_fileupload/' + filename
+        #*******Check File location Test or Production ***********
+        flag = None
+        for loc in CHECK_FILE_LOCATION:
+            if os.path.exists(loc + filename):
+                filename = loc + filename
+                flag=True
+        if not flag:
+            raise "Error,No file found found - %s" % (filename)
+        #filename= '/static/cache/test/teco_fileupload/' + filename
         f1 = open(filename,'r')
         header = f1.readline()
         f1.close()
@@ -147,7 +155,15 @@ def teco_upload_grass(user_id,filename,file_type='fixed_width',addDict=None,spec
         else:
             addDict = addDt
         collection = 'uploaded_grass'
-        filename = '/static/cache/test/teco_fileupload/' + filename
+        #*******Check File location Test or Production ***********
+        flag = None
+        for loc in CHECK_FILE_LOCATION:
+            if os.path.exists(loc + filename):
+                filename = loc + filename
+                flag=True
+        if not flag:
+            raise "Error,No file found found - %s" % (filename)
+        #filename = '/static/cache/test/teco_fileupload/' + filename
         f1 = open(filename,'r')
         header = f1.readline()
         f1.close()
