@@ -249,10 +249,13 @@ def set_obs_date_grassland(row):
 def set_site_param_grass(task_id,param):
     head=['Lat','Co2ca','output','newline','a1','Ds0','Vcmx0','extku','xfang','alpha','stom_n','newline','Wsmax','Wsmin','newline',
           'rdepth','rfibre','newline','SLA','LAIMAX','LAIMIN','newline','Rootmax','Stemmax','SenS','SenR','newline']
+    inithead = ['nsc','Storage','Q_leaf','Q_wood','Q_root1','Q_root2','Q_root3','Q_coarse','Q_fine','Q_soil1','Q_soil2','Q_soil3']
+
     wkdir =basedir + "celery_data/" + str(task_id)
     os.chdir(wkdir)
     header=''
     value=''
+    initvalue=''
     f1 = open('sitepara_tcs.txt','w')
     for col in head:
         if col =='newline':
@@ -264,7 +267,11 @@ def set_site_param_grass(task_id,param):
             header = header + col + "\t"
             value = value + str(param[col]) + "\t"
     f1.close()
-        
+    for col in inithead:
+          initvalue= initvalue + str(param[col]) + "\n"
+    f2 = open('initial_opt.txt','w')
+    f2.write(initvalue)
+    f2.close()        
 def set_site_param(task_id,param):
     ''' Param is a dictionary with the site paramiters'''
     head =[ 'site','vegtype','inputfile','NEEfile','outputfile','lat','Longitude','wsmax','wsmin','gddonset',
