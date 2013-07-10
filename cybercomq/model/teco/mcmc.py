@@ -1,7 +1,7 @@
 from celery.task import task
 from celery.task.sets import subtask
 from subprocess import check_call
-
+import glob, shutil 
 import os,ast
 
 @task()
@@ -20,7 +20,9 @@ def initMCMCrun(callback=None,basedir=None,site=None,siteparam=None):
     os.chdir(newDir)
     #copy matlab code to working directory
     codeDir =basedir + 'mcmc_matlab/'
-    check_call(["cp","-r",codeDir + '*',newDir])
+    for file in glob.glob(codeDir + '*'): 
+        shutil.copy(file, newDir) 
+    #check_call(["cp","-r",codeDir + '*',newDir])
     #set inital Paramters files
     setup_param(newDir,param)
     if callback:
