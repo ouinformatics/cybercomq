@@ -55,8 +55,8 @@ def setup_param(newDir, param):
         tfile=tfile + str(param['cmin5']) + ' ' + str(param['cmin6']) + ' ' + str(param['cmin7']) + '];\n'
         tfile=tfile + 'cmax = [' + str(param['cmax1']) + ' ' + str(param['cmax2']) + ' ' + str(param['cmax3']) + ' ' + str(param['cmax4']) + ' '
         tfile=tfile + str(param['cmax5']) + ' ' + str(param['cmax6']) + ' ' + str(param['cmax7']) + '];\n'  
-        tfile=tfile + 'x0 = ['+ str(param['foliage']) + ' ' + str(param['woody']) + ' ' + str(param['structural_litter']) + ' '+str(param['labile_soil_carbon']) + ' '
-        tfile=tfile + str(param['slow_soil_carbon']) + ' ' + str(param['passive_soil_carbon']) + '];\n'
+        tfile=tfile + 'x0 = ['+ str(param['foliage']) + ' ' + str(param['woody']) + ' ' + str(param['metabolic_litter']) + ' ' + str(param['structural_litter']) + ' '
+        tfile=tfile + str(param['labile_soil_carbon']) + ' ' + str(param['slow_soil_carbon']) + ' ' + str(param['passive_soil_carbon']) + '];\n'
         tfile=tfile + 'nsim = ' + str(param['nsim']) + ';\n'
         tfile = tfile + "if strcmp(parm,'cmin')\n\tz = cmin;\nend\n"
         tfile = tfile + "if strcmp(parm,'cmax')\n\tz = cmax;\nend\n"
