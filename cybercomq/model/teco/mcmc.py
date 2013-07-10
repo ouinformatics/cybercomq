@@ -1,6 +1,6 @@
 from celery.task import task
 from celery.task.sets import subtask
-from subprocess import call
+from subprocess import check_call
 
 import os,ast
 
@@ -16,11 +16,11 @@ def initMCMCrun(callback=None,basedir=None,site=None,siteparam=None):
         raise "Basedir is required"
     #Create working directory
     newDir = basedir + "celery_data/" + str(initMCMCrun.request.id)
-    call(["mkdir",newDir])
+    check_call(["mkdir",newDir])
     os.chdir(newDir)
     #copy matlab code to working directory
     codeDir =basedir + 'mcmc_matlab/'
-    call(["cp","-r",codeDir + '*',newDir])
+    check_call(["cp","-r",codeDir + '*',newDir])
     #set inital Paramters files
     setup_param(newDir,param)
     if callback:
@@ -33,9 +33,9 @@ def initMCMCrun(callback=None,basedir=None,site=None,siteparam=None):
 @task()
 def runMCMC(task_id=None,wkdir=None):
     os.chdir(wkdir)
-    call(["/opt/matlab_R2012/bin/matlab","-nodisplay","-r","try,MCMC, catch, end, quit",">","Matlab_log.txt"])
+    check_call(["/opt/matlab_R2012/bin/matlab","-nodisplay","-r","try,MCMC, catch, end, quit",">","Matlab_log.txt"])
     webloc ="/static/queue/model/teco/" + task_id
-    call(['scp','-r', wkdir , "mstacy@static.cybercommons.org:" + webloc])
+    check_call(['scp','-r', wkdir , "mstacy@static.cybercommons.org:" + webloc])
     temp = "<h4>Result Files</h4><br/>"
     http= "http://static.cybercommons.org/queue/model/teco/" + task_id
     temp = temp +  ' <a href="' + http + '" target="_blank">' + http + '</a><br/>'
@@ -48,7 +48,7 @@ def setup_param(newDir, param):
     try:
         f1= open(newDir + '/param.m','w')
         tfile ='function x = param(parm)\n% Initial parameters\n'
-        tfile=tfile + 'nput =' + str(param['nput']) + ';% 2 -- ambient inversion, 3 -- elevated inversion'
+        tfile=tfile + 'nput =' + str(param['nput']) + ';% 2 -- ambient inversion, 3 -- elevated inversion\n'
         tfile=tfile + 'cmin = [' + str(param['cmin1']) + ' ' + str(param['cmin2']) + ' ' + str(param['cmin3']) + ' ' + str(param['cmin4']) + ' '
         tfile=tfile + str(param['cmin5']) + ' ' + str(param['cmin6']) + ' ' + str(param['cmin7']) + '];\n'
         tfile=tfile + 'cmax = [' + str(param['cmax1']) + ' ' + str(param['cmax2']) + ' ' + str(param['cmax3']) + ' ' + str(param['cmax4']) + ' '
