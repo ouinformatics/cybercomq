@@ -36,8 +36,14 @@ def initMCMCrun(callback=None,basedir=None,site=None,siteparam=None):
 def runMCMC(task_id=None,wkdir=None):
     os.chdir(wkdir)
     check_call(["/opt/matlab_R2012/bin/matlab","-nodisplay","-r","try,MCMC, catch, end, quit",">","Matlab_log.txt"])
+    #clean up output folder
+    check_call(["mkdir",wkdir + '/matlab_code' ])
+    for file in glob.glob(wkdir + '/*.m'):
+        shutil.move(file, wkdir + '/matlab_code')
+    #scp to static server
     webloc ="/static/queue/model/teco/" + task_id
     check_call(['scp','-r', wkdir , "mstacy@static.cybercommons.org:" + webloc])
+    #render results
     temp = "<h4>Result Files</h4><br/>"
     http= "http://static.cybercommons.org/queue/model/teco/" + task_id
     temp = temp +  ' <a href="' + http + '" target="_blank">' + http + '</a><br/>'
