@@ -8,7 +8,7 @@ from subprocess import call,STDOUT
 import os,commands,json,ast
 from mcmc import *
 import math
-mongoHost = 'fire.rccc.ou.edu'
+mongoHost = 'localhost'
 if os.uname()[1] == 'dhcp-213-41.rccc.ou.edu':
     basedir = '/Users/mstacy/Desktop/projects/TECO_HarvardForest/'
 elif os.uname()[1] == 'Marks-MacBook-Pro.local':
