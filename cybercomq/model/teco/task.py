@@ -7,6 +7,7 @@ from cybercom.data.catalog import datalayer,dataloader
 from subprocess import call,STDOUT
 import os,commands,json,ast
 from mcmc import *
+from enkf import *
 import math
 mongoHost = 'localhost'
 if os.uname()[1] == 'dhcp-213-41.rccc.ou.edu':
@@ -34,7 +35,7 @@ def runTECOworkflow(site=None,base_yrs=None,forecast=None,siteparam=None,mod_wea
             result=initTECOrun.delay(site=site,base_yrs=base_yrs,forecast=forecast,mod_weather=mod_weather,upload=upload,callback=subtask(runTeco))
             return {'task_id':result.task_id,'task_name':result.task_name}
     elif model == 'DDA':
-        dda=1
+        #dda=1
         if not dda_freq:
             raise "Please specify parameter 'dda_hour_freq', Frequency to pass to kalmen filter(1 for every hour, 8 for every eighth hour)"
         if siteparam:
@@ -49,6 +50,9 @@ def runTECOworkflow(site=None,base_yrs=None,forecast=None,siteparam=None,mod_wea
     elif model =='MCMC':
         result =initMCMCrun.delay(basedir=basedir,site=site,siteparam=siteparam,callback=subtask(runMCMC))
         return {'task_id':result.task_id,'task_name':result.task_name} 
+    elif model =='enkf':
+          result =initEnKFrun.delay(basedir=basedir,site=site,siteparam=siteparam,callback=subtask(runEnKF))
+          return {'task_id':result.task_id,'task_name':result.task_name}
     else:
         raise "Model parameter must be either TECO_f1 or DDA"
 @task()
