@@ -40,6 +40,11 @@ def runEnKF(task_id=None,wkdir=None):
     check_call(["mkdir",wkdir + '/matlab_code' ])
     for file in glob.glob(wkdir + '/*.m'):
         shutil.move(file, wkdir + '/matlab_code')
+    for file in glob.glob(wkdir + '/*.txt'):
+        if not os.path.basename(file)=='Matlab_log.txt':
+            shutil.move(file, wkdir + '/matlab_code')
+    for file in glob.glob(wkdir + '/*.csv'):
+        shutil.move(file, wkdir + '/matlab_code')
     #scp to static server
     webloc ="/static/queue/model/teco/" + task_id
     check_call(['scp','-r', wkdir , "mstacy@static.cybercommons.org:" + webloc])
