@@ -52,7 +52,7 @@ def runEnKF(task_id=None,wkdir=None):
     temp = "<h4>Result Files</h4><br/>"
     http= "http://static.cybercommons.org/queue/model/teco/" + task_id
     temp = temp +  ' <a href="' + http + '" target="_blank">' + http + '</a><br/>'
-    temp = temp + "<h4>MCMC Result Graphs</h4><br/>"
+    temp = temp + "<h4>EnKF Result Graphs</h4><br/>"
     temp=temp + ' <img src="' + http + '/figure1.jpg" alt="Figure 1">'
     temp=temp + ' <a href="' + http + '/figure1.jpg" target="_blank">' + http + '/figure1.jpg</a><br/>'
     temp=temp + ' <img src="' + http + '/figure2.jpg" alt="Figure 2">'
