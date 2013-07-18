@@ -46,9 +46,9 @@ def runMCMC(task_id=None,wkdir=None):
     webloc ="/static/queue/model/teco/" + task_id
     check_call(['scp','-r', wkdir , "mstacy@static.cybercommons.org:" + webloc])
     #render results
-    temp = "<h4>Result Files</h4><br/>"
-    http= "http://static.cybercommons.org/queue/model/teco/" + task_id
-    temp = temp +  ' <a href="' + http + '" target="_blank">' + http + '</a><br/>'
+    temp = "<br><h4>Result Files</h4><br/>"
+    http= "http://static.cybercommons.org/queue/model/teco/" + task_id 
+    temp = temp +  ' <a href="' + http + '/model_run_archive.zip" target="_blank">Download Model Results</a><br/>'
     temp = temp + "<h4>MCMC Result Graphs</h4><br/>"
     temp=temp + ' <img src="' + http + '/figure1.jpg" alt="Figure 1">'
     temp=temp + ' <a href="' + http + '/figure1.jpg" target="_blank">' + http + '/figure1.jpg</a><br/>'

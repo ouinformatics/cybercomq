@@ -204,9 +204,9 @@ def runTeco(task_id=None,model=None, dda_freq=1 ,spinup='1450',runyears='',base_
             dld.file2mongo(wkdir + "/TECO_pools_C.csv",collection,file_type='csv',addDict={'task_id': task_id+'Cpools'})
 
         #http= "http://static.cybercommons.org/queue/model/teco/" + task_id + ".txt"
-        temp = "<h4>Result Files</h4><br/>"
+        temp = "<br><h4>Result Files</h4><br/>"
         http= "http://static.cybercommons.org/queue/model/teco/" + task_id
-        temp = temp +  ' <a href="' + http + '" target="_blank">' + http + '</a><br/>'
+        temp = temp +  ' <a href="' + http + '/model_run_archive.zip">Download Model Results</a><br/>'
         temp = temp + "<h4>TECO Graphs</h4><br/>"
         if model!= 'grassland':
             http= "http://static.cybercommons.org/apptest/teco_plot/?task_id=" + task_id 
