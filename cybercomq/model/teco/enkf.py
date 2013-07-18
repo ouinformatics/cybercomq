@@ -53,22 +53,22 @@ def runEnKF(task_id=None,wkdir=None):
     #render results
     temp = "<br><h4>Result Files</h4><br/>"
     http= "http://static.cybercommons.org/queue/model/teco/" + task_id 
-    temp = temp +  ' <a href="' + http + '/model_run_archive.zip" target="_blank">Download Model Results</a><br/>'
+    temp = temp +  ' <a href="' + http + '/model_run_archive.zip" >Download Model Results</a><br/>'
     temp = temp + "<h4>EnKF Result Graphs</h4><br/>"
     temp=temp + ' <img src="' + http + '/figure1.jpg" alt="Figure 1">'
-    temp=temp + ' <a href="' + http + '/figure1.jpg" target="_blank">' + http + '/figure1.jpg</a><br/>'
+    #temp=temp + ' <a href="' + http + '/figure1.jpg" target="_blank">' + http + '/figure1.jpg</a><br/>'
     temp=temp + ' <img src="' + http + '/figure2.jpg" alt="Figure 2">'
-    temp=temp + ' <a href="' + http + '/figure2.jpg" target="_blank">' + http + '/figure2.jpg</a><br/>'
+    #temp=temp + ' <a href="' + http + '/figure2.jpg" target="_blank">' + http + '/figure2.jpg</a><br/>'
     temp=temp + ' <img src="' + http + '/figure4.jpg" alt="Figure 4">'
-    temp=temp + ' <a href="' + http + '/figure4.jpg" target="_blank">' + http + '/figure4.jpg</a><br/>'
+    #temp=temp + ' <a href="' + http + '/figure4.jpg" target="_blank">' + http + '/figure4.jpg</a><br/>'
     temp=temp + ' <img src="' + http + '/figure5.jpg" alt="Figure 5">'
-    temp=temp + ' <a href="' + http + '/figure5.jpg" target="_blank">' + http + '/figure5.jpg</a><br/>'
+    #temp=temp + ' <a href="' + http + '/figure5.jpg" target="_blank">' + http + '/figure5.jpg</a><br/>'
     temp=temp + ' <img src="' + http + '/figure7.jpg" alt="Figure 7">'
-    temp=temp + ' <a href="' + http + '/figure7.jpg" target="_blank">' + http + '/figure7.jpg</a><br/>'
+    #temp=temp + ' <a href="' + http + '/figure7.jpg" target="_blank">' + http + '/figure7.jpg</a><br/>'
     temp=temp + ' <img src="' + http + '/figure8.jpg" alt="Figure 8">'
-    temp=temp + ' <a href="' + http + '/figure8.jpg" target="_blank">' + http + '/figure8.jpg</a><br/>'
+    #temp=temp + ' <a href="' + http + '/figure8.jpg" target="_blank">' + http + '/figure8.jpg</a><br/>'
     temp=temp + ' <img src="' + http + '/figure9.jpg" alt="Figure 9">'
-    temp=temp + ' <a href="' + http + '/figure9.jpg" target="_blank">' + http + '/figure9.jpg</a><br/>'
+    #temp=temp + ' <a href="' + http + '/figure9.jpg" target="_blank">' + http + '/figure9.jpg</a><br/>'
     return temp
 
 def setup_param(newDir, param):

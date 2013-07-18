@@ -48,12 +48,12 @@ def runMCMC(task_id=None,wkdir=None):
     #render results
     temp = "<br><h4>Result Files</h4><br/>"
     http= "http://static.cybercommons.org/queue/model/teco/" + task_id 
-    temp = temp +  ' <a href="' + http + '/model_run_archive.zip" target="_blank">Download Model Results</a><br/>'
+    temp = temp +  ' <a href="' + http + '/model_run_archive.zip" >Download Model Results</a><br/>'
     temp = temp + "<h4>MCMC Result Graphs</h4><br/>"
     temp=temp + ' <img src="' + http + '/figure1.jpg" alt="Figure 1">'
-    temp=temp + ' <a href="' + http + '/figure1.jpg" target="_blank">' + http + '/figure1.jpg</a><br/>'
+    #temp=temp + ' <a href="' + http + '/figure1.jpg" target="_blank">' + http + '/figure1.jpg</a><br/>'
     temp=temp + ' <img src="' + http + '/figure2.jpg" alt="Figure 2">'
-    temp=temp + ' <a href="' + http + '/figure2.jpg" target="_blank">' + http + '/figure2.jpg</a><br/>'
+    #temp=temp + ' <a href="' + http + '/figure2.jpg" target="_blank">' + http + '/figure2.jpg</a><br/>'
     return temp
 
 def setup_param(newDir, param):
