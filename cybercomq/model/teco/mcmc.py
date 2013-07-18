@@ -40,6 +40,8 @@ def runMCMC(task_id=None,wkdir=None):
     check_call(["mkdir",wkdir + '/matlab_code' ])
     for file in glob.glob(wkdir + '/*.m'):
         shutil.move(file, wkdir + '/matlab_code')
+    #zip all files
+    check_call(['zip','-r','archive_allfiles','.'])
     #scp to static server
     webloc ="/static/queue/model/teco/" + task_id
     check_call(['scp','-r', wkdir , "mstacy@static.cybercommons.org:" + webloc])
