@@ -186,7 +186,8 @@ def runTeco(task_id=None,model=None, dda_freq=1 ,spinup='1450',runyears='',base_
         call(['rm',wkdir + '/runTeco'])
         #call(['rm',wkdir + '/HarvardForest_hr_Chuixiang.txt'])
         #call(['./runTeco',wkdir + "/sitepara_tcs.txt",wkdr + "/US-HA1_TECO_04.txt"])
-
+        #zip all files
+        call(['zip','-r','model_run_archive','.'])
        # webloc ="/static/queue/model/teco/" + task_id + ".txt"
         webloc ="/static/queue/model/teco/" + task_id
        # call(['scp', wkdir +"/US-HA1_TECO_04.txt", "mstacy@static.cybercommons.org:" + webloc])
