@@ -46,7 +46,7 @@ def runEnKF(task_id=None,wkdir=None):
     for file in glob.glob(wkdir + '/*.csv'):
         shutil.move(file, wkdir + '/matlab_code')
     #zip all files
-    check_call(['zip','-r','archive_allfiles','.'])
+    check_call(['zip','-r','model_enkf_allfiles','.'])
     #scp to static server
     webloc ="/static/queue/model/teco/" + task_id
     check_call(['scp','-r', wkdir , "mstacy@static.cybercommons.org:" + webloc])
