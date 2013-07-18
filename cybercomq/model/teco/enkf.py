@@ -56,7 +56,7 @@ def runEnKF(task_id=None,wkdir=None):
     temp = temp +  ' <a href="' + http + '/model_run_archive.zip" >Download Model Results</a><br/>'
     temp = temp + "<h4>EnKF Result Graphs</h4><br/>"
     temp=temp + ' <a href="' + http + '/figure1.jpg" target="_blank">Figure 1</a><br/>'
-    temp=temp + ' <img src="' + http + '/figure1.jpg" alt="Figure 1"><br.'
+    temp=temp + ' <img src="' + http + '/figure1.jpg" alt="Figure 1"><br>'
     #temp=temp + ' <a href="' + http + '/figure1.jpg" target="_blank">' + http + '/figure1.jpg</a><br/>'
     temp=temp + ' <a href="' + http + '/figure2.jpg" target="_blank">Figure 2</a><br/>'
     temp=temp + ' <img src="' + http + '/figure2.jpg" alt="Figure 2"><br>'
