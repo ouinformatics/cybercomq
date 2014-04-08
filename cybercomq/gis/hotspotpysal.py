@@ -134,7 +134,7 @@ def cleanup(filename):
     shutil.rmtree(os.path.dirname(filename))
 
 @task
-def hotspots(timestep, location, distance=5, zFilter_lt=1, minpixels=5, task_id=None):
+def hotspots(timestep, location, distance=5, zFilter_lt=1, minpixels=5, task_id=None, task_name=None):
     ''' Run a hotspot analysis at a given timestep and location '''
     logging.info('Startting...')
     start=time.time()
@@ -199,4 +199,17 @@ def hotspotsRange(start_time, stop_time, location, **kwargs):
     stop = datetime.strptime(stop_time, '%Y%m%d.%H%M%S')
     kwargs.update({'task_id': hotspotsRange.request.id})
     subtasks = [ send_task("cybercomq.gis.hotspotpysal.hotspots", args=(ts,location), kwargs=kwargs, queue="gis", track_started=True).task_id for ts in date_range(start,stop) ]
-    return subtasks  
+    return subtasks
+
+@task
+def hotspotsRange_ts(start_time, stop_time, location, **kwargs):
+    ''' Run ofver a range of timesteps at 5 minute intervals in between '''
+    start = datetime.strptime(start_time, '%Y%m%d.%H%M%S')
+    stop = datetime.strptime(stop_time, '%Y%m%d.%H%M%S')
+    kwargs.update({'task_id': hotspotsRange.request.id})
+    job = TaskSet(tasks=[ cybercomq.gis.hotspotpysal.hotspots.subtask(args=(ts,location), kwargs=kwargs, queue="gis", track_started=True) for ts in date_range(start,stop) ])
+    job.apply_async(job)
+    return '%s' % (hotspotsRange_ts.request.id)
+
+
+
